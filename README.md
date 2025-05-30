@@ -5,7 +5,7 @@ VacTrack là ứng dụng di động hỗ trợ người dùng dễ dàng đặt
 ---
 
 ## Tính năng chính
-![image](https://github.com/user-attachments/assets/41494f05-6382-4662-adc0-a9d82d1e1c60) | ![image](https://github.com/user-attachments/assets/3d308628-0d13-4e59-83fe-3ac91a4279dd)
+![image](https://github.com/user-attachments/assets/62983d09-7b18-4dcd-bd79-1bbce8b6f1a3) | ![image](https://github.com/user-attachments/assets/127594fb-ffd0-4461-b0cc-95c32730b975)
 
 
 
@@ -62,6 +62,9 @@ VacTrack hướng tới trở thành nền tảng hỗ trợ tiêm chủng và q
 
 ## Liên hệ
 - Email hỗ trợ: support@vactrack.com
-- Website: www.vactrack.com
-
+- Sinh viên thực hiện:
+  + Nguyễn Đức Lượng - 077205012208
+  + Nguyễn Trường Phục - 08205013224
+  + Nguyễn Phạm Thiên Phước - 052205012221
+- Giảng viên hướng dẫn: Trương Quang Tuấn.
 ---
