@@ -1,0 +1,5 @@
+<resources>
+    <string name="app_name">VacTrack</string>
+    <string name="google_client_id">183957510928-ojqsn190ojn0ftingon12meei1nh31aq.apps.googleusercontent.com</string>
+    <!--//<string name="facebook_app_id">YOUR_FACEBOOK_APP_ID</string>-->
+</resources>
