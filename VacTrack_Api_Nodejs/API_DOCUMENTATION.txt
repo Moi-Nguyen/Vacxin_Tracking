@@ -1,0 +1,247 @@
+============================
+VACTRACK API DOCUMENTATION
+============================
+
+1. AUTHENTICATION & USER MANAGEMENT
+-----------------------------------
+
+1.1. Đăng ký tài khoản (Register)
+POST /api/auth/register
+Request:
+{
+  "name": "Tên đăng ký",
+  "email": "user@example.com",
+  "password": "123456",
+  "fullName": "Họ và tên",
+  "age": 25,
+  "dob": "2000-01-01",
+  "address": "Hà Nội",
+  "phone": "0123456789",
+  "role": "user" // chỉ admin mới tạo được admin/doctor
+}
+Response:
+{
+  "message": "User registered successfully",
+  "token": "jwt_token",
+  "user": {
+    "id": "user_id",
+    "email": "user@example.com",
+    "name": "Tên đăng ký",
+    "role": "user"
+  }
+}
+
+1.2. Đăng nhập (Login)
+POST /api/auth/login
+Request:
+{
+  "email": "user@example.com",
+  "password": "123456"
+}
+Response:
+{
+  "message": "Login successful",
+  "token": "jwt_token",
+  "user": {
+    "id": "user_id",
+    "email": "user@example.com",
+    "name": "Tên đăng ký",
+    "role": "user"
+  }
+}
+
+1.3. Lấy danh sách user (phân trang, tìm kiếm, lọc role, chỉ admin)
+GET /api/auth/users?search=...&role=...&page=...&limit=...
+Headers: Authorization: Bearer <admin_token>
+Response:
+{
+  "users": [ { ...user... } ],
+  "total": 10,
+  "totalPages": 1,
+  "currentPage": 1
+}
+
+1.4. Lấy toàn bộ user (không phân trang, chỉ admin)
+GET /api/auth/users/all
+Headers: Authorization: Bearer <admin_token>
+Response:
+[
+  { ...user... },
+  ...
+]
+
+1.5. Cập nhật thông tin cá nhân
+PUT /api/auth/profile
+Headers: Authorization: Bearer <token>
+Request:
+{
+  "fullName": "Họ và tên mới",
+  "age": 26,
+  "dob": "1999-12-31",
+  "address": "TP.HCM",
+  "phone": "0987654321"
+}
+Response:
+{
+  "message": "Profile updated successfully",
+  "user": { ...user... }
+}
+
+1.6. Xóa user (chỉ admin)
+DELETE /api/auth/users/:id
+Headers: Authorization: Bearer <admin_token>
+Response:
+{
+  "message": "User deleted successfully"
+}
+
+
+2. VACCINE MANAGEMENT
+---------------------
+
+2.1. Lấy danh sách vaccine (phân trang, tìm kiếm)
+GET /api/vaccines?search=...&page=...&limit=...
+Headers: Authorization: Bearer <token>
+Response:
+{
+  "vaccines": [ { ...vaccine... } ],
+  "totalPages": 1,
+  "currentPage": 1
+}
+
+2.2. Lấy toàn bộ vaccine (không phân trang)
+GET /api/vaccines/all
+Headers: Authorization: Bearer <token>
+Response:
+[
+  { ...vaccine... },
+  ...
+]
+
+2.3. Thêm vaccine mới (chỉ admin)
+POST /api/vaccines
+Headers: Authorization: Bearer <admin_token>
+Request:
+{
+  "name": "COVID-19 Vaccine",
+  "manufacturer": "Pfizer",
+  "description": "mRNA vaccine for COVID-19",
+  "dosage": "2 doses, 21 days apart",
+  "storageTemperature": -70,
+  "shelfLife": 6,
+  "quantity": 1000,
+  "sideEffects": ["Fever", "Fatigue"],
+  "contraindications": ["Severe allergic reactions"]
+}
+Response:
+{
+  "message": "Vaccine created successfully",
+  "vaccine": { ...vaccine... }
+}
+
+2.4. Xóa vaccine (chỉ admin)
+DELETE /api/vaccines/:id
+Headers: Authorization: Bearer <admin_token>
+Response:
+{
+  "message": "Vaccine deleted successfully"
+}
+
+2.5. Cập nhật vaccine (chỉ admin)
+PUT /api/vaccines/:id
+Headers: Authorization: Bearer <admin_token>
+Request: (giống khi tạo mới)
+Response:
+{
+  "message": "Vaccine updated successfully",
+  "vaccine": { ...vaccine... }
+}
+
+
+3. PASSWORD RESET & CHANGE
+--------------------------
+
+3.1. Gửi yêu cầu quên mật khẩu (gửi OTP về email)
+POST /api/auth/request-reset
+Request:
+{
+  "email": "user@example.com"
+}
+Response:
+{
+  "message": "OTP sent to your email"
+}
+
+3.2. Xác thực OTP và nhận mật khẩu mới qua email
+POST /api/auth/verify-otp
+Request:
+{
+  "email": "user@example.com",
+  "otp": "123456"
+}
+Response:
+{
+  "message": "New password has been sent to your email"
+}
+
+3.3. Đổi mật khẩu (khi đã đăng nhập)
+POST /api/auth/change-password
+Headers: Authorization: Bearer <token>
+Request:
+{
+  "currentPassword": "matkhau_cu",
+  "newPassword": "matkhau_moi"
+}
+Response:
+{
+  "message": "Password changed successfully"
+}
+
+
+4. SOCIAL LOGIN (GOOGLE, FACEBOOK)
+-----------------------------------
+
+4.1. Đăng nhập Google
+GET /api/auth/google
+
+4.2. Đăng nhập Facebook
+GET /api/auth/facebook
+
+
+5. LƯU Ý & PHÂN QUYỀN
+---------------------
+- Các API quản lý user/vaccine chỉ cho phép admin (role: admin) thực hiện.
+- Token JWT trả về khi đăng nhập/đăng ký có trường "role" để frontend xác định quyền.
+- Khi gọi API cần xác thực, gửi header: Authorization: Bearer <token>
+- Nếu token hết hạn hoặc không hợp lệ, backend trả về lỗi xác thực.
+
+
+6. USER OBJECT MẪU
+------------------
+{
+  "id": "6830af8a35113304b0b90ac3",
+  "email": "admin@vacktrack.com",
+  "name": "Admin",
+  "fullName": "Nguyễn Trường Phục",
+  "age": 35,
+  "dob": "2005-07-04T00:00:00.000Z",
+  "address": "TP HCM",
+  "phone": "0965563567",
+  "role": "admin"
+}
+
+7. VACCINE OBJECT MẪU
+---------------------
+{
+  "id": "vaccine_id",
+  "name": "COVID-19 Vaccine",
+  "manufacturer": "Pfizer",
+  "description": "mRNA vaccine for COVID-19",
+  "dosage": "2 doses, 21 days apart",
+  "storageTemperature": -70,
+  "shelfLife": 6,
+  "quantity": 1000,
+  "sideEffects": ["Fever", "Fatigue"],
+  "contraindications": ["Severe allergic reactions"],
+  "isActive": true
+} 
