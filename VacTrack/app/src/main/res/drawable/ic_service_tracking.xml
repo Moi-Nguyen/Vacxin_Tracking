@@ -1,0 +1,33 @@
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="100dp"
+    android:height="100dp"
+    android:viewportWidth="100"
+    android:viewportHeight="100">
+
+    <!-- Nền tròn xanh ngọc -->
+    <path
+        android:fillColor="#00BCD4"
+        android:pathData="M50,0A50,50 0 1,0 50.01,0Z" />
+
+    <!-- Chuông - Phần đầu (to, căn giữa) -->
+    <path
+        android:pathData="M28,48
+                          Q28,32 50,32
+                          Q72,32 72,48
+                          L72,60
+                          A4,4 0 0,1 68,64
+                          L32,64
+                          A4,4 0 0,1 28,60Z"
+        android:fillColor="#FAFAFA"
+        android:strokeColor="#666666"
+        android:strokeWidth="2" />
+
+    <!-- Tay chuông - hình tròn gắn dưới, ở giữa -->
+    <path
+        android:pathData="M44,64
+                          A6,6 0 1,0 56,64
+                          A6,6 0 1,0 44,64Z"
+        android:fillColor="#FAFAFA"
+        android:strokeColor="#666666"
+        android:strokeWidth="2" />
+</vector>
