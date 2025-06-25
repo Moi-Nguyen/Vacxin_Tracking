@@ -2,19 +2,18 @@ package com.uth.vactrack.ui.UILogin
 
 import androidx.compose.runtime.*
 import androidx.navigation.NavType
-import androidx.navigation.compose.NavHost
-import androidx.navigation.compose.composable
-import androidx.navigation.compose.rememberNavController
+import androidx.navigation.compose.*
 import androidx.navigation.navArgument
-import com.uth.vactrack.ui.UIUser.HomeScreen
-import com.uth.vactrack.ui.UIUser.MainScreen
-import com.uth.vactrack.ui.UIUser.AppointmentScreen
+import com.uth.vactrack.ui.UIUser.*
+
 @Composable
 fun AppNavHost(startDestination: String = "login") {
     val navController = rememberNavController()
     var loginEmail by remember { mutableStateOf("") }
 
     NavHost(navController = navController, startDestination = startDestination) {
+
+        // Login
         composable("login") {
             LoginScreen(
                 onLoginSuccess = {
@@ -29,6 +28,7 @@ fun AppNavHost(startDestination: String = "login") {
             )
         }
 
+        // Register
         composable("register") {
             RegisterScreen(
                 onRegisterSuccess = {
@@ -40,6 +40,7 @@ fun AppNavHost(startDestination: String = "login") {
             )
         }
 
+        // Forgot Password
         composable(
             "forgot_password?email={email}",
             arguments = listOf(navArgument("email") {
@@ -57,6 +58,7 @@ fun AppNavHost(startDestination: String = "login") {
             )
         }
 
+        // OTP
         composable(
             "otp?email={email}",
             arguments = listOf(navArgument("email") {
@@ -70,13 +72,12 @@ fun AppNavHost(startDestination: String = "login") {
                 onOtpVerified = { resetToken ->
                     navController.navigate("confirm_reset?resetToken=$resetToken")
                 },
-                onResend = {
-                    navController.popBackStack()
-                },
+                onResend = { navController.popBackStack() },
                 onBack = { navController.popBackStack() }
             )
         }
 
+        // Confirm Reset
         composable(
             "confirm_reset?resetToken={resetToken}",
             arguments = listOf(navArgument("resetToken") {
@@ -93,6 +94,7 @@ fun AppNavHost(startDestination: String = "login") {
             )
         }
 
+        // Set New Password
         composable(
             "set_new_password?resetToken={resetToken}",
             arguments = listOf(navArgument("resetToken") {
@@ -112,7 +114,7 @@ fun AppNavHost(startDestination: String = "login") {
             )
         }
 
-        // ✅ Thêm HomeScreen sau login
+        // Home
         composable("home") {
             HomeScreen(
                 onLearnMoreClick = {
@@ -121,12 +123,22 @@ fun AppNavHost(startDestination: String = "login") {
             )
         }
 
-        // ✅ Thêm MainScreen sau khi nhấn Learn More
+        // Main screen
         composable("main") {
-            MainScreen(navController = navController) // ✅ Sửa ở đây
+            MainScreen(navController = navController)
         }
+
+        // Appointment screen
         composable("appointment") {
-            AppointmentScreen(onBack = { navController.popBackStack() })
+            AppointmentScreen(
+                navController = navController,
+                onBack = { navController.popBackStack() }
+            )
+        }
+
+        // Select Service screen ✅ fixed onBack
+        composable("select_service") {
+            SelectServiceScreen(onBack = { navController.popBackStack() })
         }
     }
 }

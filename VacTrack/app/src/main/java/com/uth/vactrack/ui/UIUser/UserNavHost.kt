@@ -14,8 +14,11 @@ fun UserNavHost(navController: NavHostController = rememberNavController()) {
         }
 
         composable("appointment") {
-            AppointmentScreen(onBack = { navController.popBackStack() })
+            AppointmentScreen(navController = navController, onBack = { navController.popBackStack() })
         }
 
+        composable("select_service") {
+            SelectServiceScreen()
+        }
     }
 }

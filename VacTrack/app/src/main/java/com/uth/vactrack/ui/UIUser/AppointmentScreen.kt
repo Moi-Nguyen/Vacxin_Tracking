@@ -5,7 +5,6 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
-import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.*
@@ -20,19 +19,21 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.navigation.NavController
+import androidx.navigation.compose.rememberNavController
 import com.uth.vactrack.R
 import com.uth.vactrack.ui.theme.VacTrackTheme
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun AppointmentScreen(onBack: () -> Unit = {}) {
-    // Input state variables
+fun AppointmentScreen(
+    navController: NavController = rememberNavController(),
+    onBack: () -> Unit = { navController.popBackStack() }
+) {
     val name = remember { mutableStateOf("") }
     val birthday = remember { mutableStateOf("") }
     val phone = remember { mutableStateOf("") }
     val insuranceId = remember { mutableStateOf("") }
-
-    // Fake data list (you can replace this with real ViewModel data)
     val appointmentHistory = listOf(1, 2, 3)
 
     Scaffold(
@@ -83,7 +84,11 @@ fun AppointmentScreen(onBack: () -> Unit = {}) {
         ) {
             item { SectionTitle("Appointment For:") }
             item { AppointmentCard() }
-            item { AppointmentButton() }
+            item {
+                AppointmentButton(onClick = {
+                    navController.navigate("select_service")
+                })
+            }
 
             item { SectionTitle("Other:") }
             item {
@@ -98,7 +103,11 @@ fun AppointmentScreen(onBack: () -> Unit = {}) {
                     onInsuranceIdChange = { insuranceId.value = it }
                 )
             }
-            item { ContinueButton() }
+            item {
+                ContinueButton(onClick = {
+                    navController.navigate("select_service")
+                })
+            }
 
             item { SectionTitle("Appointment History:") }
 
@@ -146,9 +155,9 @@ fun AppointmentCard() {
 }
 
 @Composable
-fun AppointmentButton() {
+fun AppointmentButton(onClick: () -> Unit) {
     Button(
-        onClick = { },
+        onClick = onClick,
         modifier = Modifier
             .fillMaxWidth()
             .height(44.dp),
@@ -222,10 +231,10 @@ fun OtherInfoCard(
 }
 
 @Composable
-fun ContinueButton() {
+fun ContinueButton(onClick: () -> Unit) {
     Box(modifier = Modifier.fillMaxWidth()) {
         Button(
-            onClick = { },
+            onClick = onClick,
             modifier = Modifier
                 .align(Alignment.Center)
                 .height(40.dp)
@@ -299,10 +308,10 @@ fun AppointmentHistoryCard() {
     }
 }
 
-@Preview(showBackground = true, showSystemUi = true, name = "Light Mode")
+@Preview(showBackground = true, showSystemUi = true, name = "Appointment Screen Preview")
 @Composable
 fun AppointmentScreenPreview() {
     VacTrackTheme {
-        AppointmentScreen()
+        AppointmentScreen(navController = rememberNavController())
     }
 }
