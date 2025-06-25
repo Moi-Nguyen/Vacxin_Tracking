@@ -1,4 +1,4 @@
-package com.uth.vactrack.ui.UIUser // ✅ sửa UIUser → uiuser
+package com.uth.vactrack.ui.UIUser
 
 import androidx.compose.foundation.*
 import androidx.compose.foundation.layout.*
@@ -19,10 +19,15 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.navigation.NavController
+import androidx.navigation.compose.rememberNavController
 import com.uth.vactrack.R
 
 @Composable
-fun BottomNavigationBar(selectedIndex: Int = 0) {
+fun BottomNavigationBar(
+    selectedIndex: Int = 0,
+    onRecordClick: () -> Unit = {}
+) {
     val icons = listOf(
         R.drawable.ic_home,
         R.drawable.ic_record,
@@ -42,7 +47,14 @@ fun BottomNavigationBar(selectedIndex: Int = 0) {
             verticalAlignment = Alignment.CenterVertically
         ) {
             icons.forEachIndexed { index, icon ->
-                Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                Column(
+                    horizontalAlignment = Alignment.CenterHorizontally,
+                    modifier = Modifier.clickable {
+                        if (items[index] == "Record") {
+                            onRecordClick()
+                        }
+                    }
+                ) {
                     Icon(
                         painter = painterResource(id = icon),
                         contentDescription = items[index],
@@ -65,7 +77,7 @@ fun BottomNavigationBar(selectedIndex: Int = 0) {
         }
 
         FloatingActionButton(
-            onClick = { /* TODO */ },
+            onClick = onRecordClick,
             containerColor = Color(0xFF007AFF),
             contentColor = Color.White,
             shape = CircleShape,
@@ -85,10 +97,13 @@ fun BottomNavigationBar(selectedIndex: Int = 0) {
 }
 
 @Composable
-fun MainScreen() {
+fun MainScreen(navController: NavController) {
     Scaffold(
         bottomBar = {
-            BottomNavigationBar(selectedIndex = 0)
+            BottomNavigationBar(
+                selectedIndex = 0,
+                onRecordClick = { navController.navigate("appointment") }
+            )
         }
     ) { innerPadding ->
         Column(
@@ -99,7 +114,6 @@ fun MainScreen() {
                 .verticalScroll(rememberScrollState())
                 .background(Color.White)
         ) {
-            // Header
             Row(
                 modifier = Modifier
                     .fillMaxWidth()
@@ -137,7 +151,12 @@ fun MainScreen() {
                 Card(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .padding(vertical = 8.dp),
+                        .padding(vertical = 8.dp)
+                        .clickable {
+                            if (title == "Book an Appointment") {
+                                navController.navigate("appointment")
+                            }
+                        },
                     shape = RoundedCornerShape(16.dp),
                     colors = CardDefaults.cardColors(containerColor = featureColors[index % featureColors.size])
                 ) {
@@ -242,7 +261,14 @@ fun MainScreen() {
                 horizontalArrangement = Arrangement.SpaceEvenly
             ) {
                 services.forEach { (icon, label) ->
-                    Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                    Column(
+                        horizontalAlignment = Alignment.CenterHorizontally,
+                        modifier = Modifier.clickable {
+                            if (label == "Vaccination") {
+                                navController.navigate("appointment")
+                            }
+                        }
+                    ) {
                         Card(
                             shape = CircleShape,
                             colors = CardDefaults.cardColors(containerColor = Color(0xFFF0F0F0)),
@@ -270,7 +296,6 @@ fun MainScreen() {
 @Preview(showBackground = true, showSystemUi = true)
 @Composable
 fun MainScreenPreview() {
-    MaterialTheme {
-        MainScreen()
-    }
+    val navController = rememberNavController()
+    MainScreen(navController = navController)
 }

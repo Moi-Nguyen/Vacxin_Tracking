@@ -8,7 +8,7 @@ import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navArgument
 import com.uth.vactrack.ui.UIUser.HomeScreen
 import com.uth.vactrack.ui.UIUser.MainScreen
-
+import com.uth.vactrack.ui.UIUser.AppointmentScreen
 @Composable
 fun AppNavHost(startDestination: String = "login") {
     val navController = rememberNavController()
@@ -123,7 +123,10 @@ fun AppNavHost(startDestination: String = "login") {
 
         // ✅ Thêm MainScreen sau khi nhấn Learn More
         composable("main") {
-            MainScreen()
+            MainScreen(navController = navController) // ✅ Sửa ở đây
+        }
+        composable("appointment") {
+            AppointmentScreen(onBack = { navController.popBackStack() })
         }
     }
 }
