@@ -22,14 +22,13 @@ import com.uth.vactrack.ui.theme.VacTrackTheme
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun PaymentScreen(
+fun BookingSuccessScreen(
     serviceName: String,
     selectedDate: String,
     selectedTime: String,
-    bill: Int,
+    bill: Int = 0,
     onBack: () -> Unit = {},
-    onCancel: () -> Unit = {},
-    onPay: () -> Unit = {}
+    onFinish: () -> Unit = {}
 ) {
     Scaffold(
         topBar = {
@@ -37,14 +36,19 @@ fun PaymentScreen(
                 title = {
                     Row(
                         verticalAlignment = Alignment.CenterVertically,
-                        horizontalArrangement = Arrangement.spacedBy(8.dp)
+                        horizontalArrangement = Arrangement.spacedBy(12.dp)
                     ) {
                         Image(
                             painter = painterResource(id = R.drawable.img_logo_xoanen),
                             contentDescription = "Logo",
-                            modifier = Modifier.size(52.dp)
+                            modifier = Modifier.size(56.dp),
+                            contentScale = ContentScale.Fit
                         )
-                        Text("Payment", fontWeight = FontWeight.Bold, fontSize = 22.sp)
+                        Text(
+                            "Success",
+                            fontSize = 22.sp,
+                            fontWeight = FontWeight.Bold
+                        )
                     }
                 },
                 navigationIcon = {
@@ -71,24 +75,24 @@ fun PaymentScreen(
     ) { innerPadding ->
         Column(
             modifier = Modifier
-                .padding(innerPadding)
                 .fillMaxSize()
+                .padding(innerPadding)
                 .padding(horizontal = 20.dp, vertical = 16.dp),
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
-            // Progress
+            // Progress bar
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.spacedBy(4.dp)
             ) {
-                repeat(4) { index ->
+                repeat(4) {
                     Box(
                         modifier = Modifier
                             .weight(1f)
                             .height(6.dp)
                             .background(
-                                if (index <= 2) Color(0xFF00BCD4) else Color.LightGray,
-                                RoundedCornerShape(4.dp)
+                                color = Color(0xFF00BCD4),
+                                shape = RoundedCornerShape(4.dp)
                             )
                     )
                 }
@@ -98,9 +102,7 @@ fun PaymentScreen(
 
             // Info Card
             Card(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .heightIn(min = 220.dp),
+                modifier = Modifier.fillMaxWidth(),
                 shape = RoundedCornerShape(20.dp),
                 colors = CardDefaults.cardColors(containerColor = Color(0xFFF2F2F2))
             ) {
@@ -118,81 +120,73 @@ fun PaymentScreen(
                                 .clip(CircleShape)
                         )
                         Spacer(modifier = Modifier.width(16.dp))
-                        Column {
-                            Text("Nguyen Van A", fontWeight = FontWeight.Bold, fontSize = 21.sp)
-                            Text("Service: $serviceName", fontSize = 18.sp)
-                            Text("Facility: Gia Dinh Hospital", fontSize = 18.sp)
-                            Spacer(modifier = Modifier.height(8.dp))
-                            Row(verticalAlignment = Alignment.CenterVertically) {
-                                Icon(
-                                    painter = painterResource(id = R.drawable.ic_calendar),
-                                    contentDescription = null,
-                                    tint = Color.Gray,
-                                    modifier = Modifier.size(20.dp)
-                                )
-                                Spacer(modifier = Modifier.width(6.dp))
-                                Text("$selectedDate   $selectedTime", fontSize = 17.sp)
-                            }
-                        }
+                        Text(
+                            "Nguyen Van A",
+                            fontWeight = FontWeight.Bold,
+                            fontSize = 22.sp
+                        )
                     }
 
-                    Spacer(modifier = Modifier.height(16.dp))
+                    Spacer(modifier = Modifier.height(20.dp))
+
                     Text(
-                        "Hospital bill: ${bill}.000đ",
+                        "Services: $serviceName",
+                        fontSize = 18.sp,
+                        fontWeight = FontWeight.Medium
+                    )
+                    Text(
+                        "Facility: Gia Dinh Hospital",
+                        fontSize = 18.sp,
+                        fontWeight = FontWeight.Medium
+                    )
+
+                    Spacer(modifier = Modifier.height(14.dp))
+
+                    Row(verticalAlignment = Alignment.CenterVertically) {
+                        Icon(
+                            painter = painterResource(id = R.drawable.ic_calendar),
+                            contentDescription = null,
+                            tint = Color.Gray,
+                            modifier = Modifier.size(20.dp)
+                        )
+                        Spacer(modifier = Modifier.width(6.dp))
+                        Text(
+                            "$selectedDate   $selectedTime",
+                            fontSize = 17.sp
+                        )
+                    }
+
+                    Spacer(modifier = Modifier.height(14.dp))
+                    Text(
+                        "Total bill: ${bill}.000đ",
                         fontWeight = FontWeight.Bold,
-                        fontSize = 20.sp,
+                        fontSize = 18.sp,
                         color = Color(0xFF222222)
                     )
                 }
             }
 
-            Spacer(modifier = Modifier.height(28.dp))
+            Spacer(modifier = Modifier.weight(1f))
 
-            // QR Code
-            Image(
-                painter = painterResource(id = R.drawable.qr_mockup),
-                contentDescription = "QR Code",
+            Button(
+                onClick = onFinish,
                 modifier = Modifier
-                    .size(320.dp)
-                    .padding(8.dp),
-                contentScale = ContentScale.Fit
-            )
-
-            Spacer(modifier = Modifier.height(24.dp))
-
-            // Buttons
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.spacedBy(16.dp)
+                    .fillMaxWidth()
+                    .height(52.dp),
+                shape = RoundedCornerShape(12.dp),
+                colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF00BCD4))
             ) {
-                OutlinedButton(
-                    onClick = onCancel,
-                    modifier = Modifier.weight(1f)
-                ) {
-                    Text("Cancel", fontSize = 16.sp)
-                }
-                Button(
-                    onClick = onPay,
-                    modifier = Modifier.weight(2f),
-                    colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF00BCD4))
-                ) {
-                    Text("Direct Payment", fontSize = 16.sp)
-                    Spacer(modifier = Modifier.width(8.dp))
-                    Icon(
-                        painter = painterResource(id = R.drawable.ic_arrow_move),
-                        contentDescription = null
-                    )
-                }
+                Text("Finish ➜", fontSize = 18.sp)
             }
         }
     }
 }
 
-@Preview(showSystemUi = true, showBackground = true)
+@Preview(showBackground = true, showSystemUi = true)
 @Composable
-fun PaymentScreenPreview() {
+fun BookingSuccessScreenPreview() {
     VacTrackTheme {
-        PaymentScreen(
+        BookingSuccessScreen(
             serviceName = "Vaccine Services",
             selectedDate = "13/05/2025",
             selectedTime = "8:00 AM",
