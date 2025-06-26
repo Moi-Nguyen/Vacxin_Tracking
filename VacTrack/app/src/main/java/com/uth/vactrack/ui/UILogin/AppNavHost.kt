@@ -5,6 +5,8 @@ import androidx.navigation.NavType
 import androidx.navigation.compose.*
 import androidx.navigation.navArgument
 import com.uth.vactrack.ui.UIUser.*
+import java.net.URLDecoder
+import java.nio.charset.StandardCharsets
 
 @Composable
 fun AppNavHost(startDestination: String = "login") {
@@ -136,9 +138,68 @@ fun AppNavHost(startDestination: String = "login") {
             )
         }
 
-        // Select Service screen ✅ fixed onBack
+        // Select Service screen
         composable("select_service") {
-            SelectServiceScreen(onBack = { navController.popBackStack() })
+            SelectServiceScreen(
+                navController = navController,
+                onBack = { navController.popBackStack() }
+            )
+        }
+
+        // Select Time and Slot screen ✅ thêm bill vào args
+        composable(
+            "select_time_and_slot/{serviceName}/{bill}",
+            arguments = listOf(
+                navArgument("serviceName") { type = NavType.StringType },
+                navArgument("bill") { type = NavType.IntType }
+            )
+        ) { backStackEntry ->
+            val serviceName = backStackEntry.arguments?.getString("serviceName") ?: ""
+            val bill = backStackEntry.arguments?.getInt("bill") ?: 0
+            SelectTimeAndSlotScreen(
+                serviceName = serviceName,
+                bill = bill,
+                navController = navController,
+                onBack = { navController.popBackStack() }
+            )
+        }
+
+        // Payment screen ✅ cập nhật thêm bill
+        composable(
+            "payment/{service}/{date}/{time}/{bill}",
+            arguments = listOf(
+                navArgument("service") { type = NavType.StringType },
+                navArgument("date") { type = NavType.StringType },
+                navArgument("time") { type = NavType.StringType },
+                navArgument("bill") { type = NavType.IntType }
+            )
+        ) { backStackEntry ->
+            val service = URLDecoder.decode(
+                backStackEntry.arguments?.getString("service") ?: "",
+                StandardCharsets.UTF_8.toString()
+            )
+            val date = URLDecoder.decode(
+                backStackEntry.arguments?.getString("date") ?: "",
+                StandardCharsets.UTF_8.toString()
+            )
+            val time = URLDecoder.decode(
+                backStackEntry.arguments?.getString("time") ?: "",
+                StandardCharsets.UTF_8.toString()
+            )
+            val bill = backStackEntry.arguments?.getInt("bill") ?: 0
+
+            PaymentScreen(
+                serviceName = service,
+                selectedDate = date,
+                selectedTime = time,
+                bill = bill,
+                onBack = { navController.popBackStack() },
+                onCancel = {
+                    navController.navigate("main") {
+                        popUpTo("main") { inclusive = true }
+                    }
+                }
+            )
         }
     }
 }

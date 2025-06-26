@@ -1,5 +1,6 @@
 package com.uth.vactrack.ui.UIUser
 
+import android.net.Uri
 import androidx.compose.foundation.*
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.CircleShape
@@ -17,20 +18,22 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.navigation.NavController
 import androidx.navigation.compose.rememberNavController
 import com.uth.vactrack.R
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun SelectServiceScreen(
-    onBack: () -> Unit = {}  // ✅ Cho phép xử lý hành động back
+    navController: NavController,
+    onBack: () -> Unit = {}
 ) {
     Scaffold(
         topBar = {
             TopAppBar(
                 title = { Text("Select Service") },
                 navigationIcon = {
-                    IconButton(onClick = onBack) { // ✅ Thực thi callback
+                    IconButton(onClick = onBack) {
                         Icon(
                             painter = painterResource(id = R.drawable.ic_arrow_back),
                             contentDescription = "Back"
@@ -38,7 +41,7 @@ fun SelectServiceScreen(
                     }
                 },
                 actions = {
-                    IconButton(onClick = { /* handle info click if needed */ }) {
+                    IconButton(onClick = { }) {
                         Icon(
                             painter = painterResource(id = R.drawable.ic_info),
                             contentDescription = "Info"
@@ -48,7 +51,7 @@ fun SelectServiceScreen(
             )
         },
         bottomBar = {
-            BottomNavigationBar(selectedIndex = 1) //
+            BottomNavigationBar(selectedIndex = 1)
         }
     ) { innerPadding ->
         Column(
@@ -78,7 +81,7 @@ fun SelectServiceScreen(
                 Text("Nguyen Van A", fontWeight = FontWeight.Bold, fontSize = 16.sp)
             }
 
-            // Progress bar
+            // Progress
             Row(
                 modifier = Modifier
                     .fillMaxWidth()
@@ -102,19 +105,24 @@ fun SelectServiceScreen(
             Text("Select Services:", fontWeight = FontWeight.Bold, fontSize = 16.sp)
             Spacer(modifier = Modifier.height(12.dp))
 
+            // List of services with bill
             val services = listOf(
-                "Vaccine Services" to "Comprehensive vaccination programs for both children and adults, including routine immunizations and specialized vaccines.",
-                "Outpatient Vaccination" to "Routine vaccinations, booster shots, and consultations with specialists for vaccine-related queries and concerns.",
-                "Emergency Vaccine Services" to "Immediate vaccination for travel-related diseases, outbreak control, and emergency vaccination in case of exposure to infectious diseases.",
-                "Vaccine Administration" to "Professional administration of various vaccines, including seasonal flu shots, hepatitis, and HPV vaccines, performed by trained healthcare professionals."
+                Triple("Vaccine Services", "Comprehensive vaccination programs for both children and adults, including routine immunizations and specialized vaccines.", 100),
+                Triple("Outpatient Vaccination", "Routine vaccinations, booster shots, and consultations with specialists for vaccine-related queries and concerns.", 200),
+                Triple("Emergency Vaccine Services", "Immediate vaccination for travel-related diseases, outbreak control, and emergency vaccination in case of exposure to infectious diseases.", 300),
+                Triple("Vaccine Administration", "Professional administration of various vaccines, including seasonal flu shots, hepatitis, and HPV vaccines, performed by trained healthcare professionals.", 50)
             )
 
-            services.forEach { (title, description) ->
+            services.forEach { (title, description, bill) ->
                 Card(
                     modifier = Modifier
                         .fillMaxWidth()
                         .padding(vertical = 6.dp)
-                        .clickable { /* TODO: Handle card click */ },
+                        .clickable {
+                            navController.navigate(
+                                "select_time_and_slot/${Uri.encode(title)}/$bill"
+                            )
+                        },
                     shape = RoundedCornerShape(12.dp),
                     elevation = CardDefaults.cardElevation(4.dp),
                     colors = CardDefaults.cardColors(containerColor = Color(0xFFF8F8F8))
@@ -153,5 +161,5 @@ fun SelectServiceScreen(
 @Preview(showBackground = true, showSystemUi = true)
 @Composable
 fun SelectServiceScreenPreview() {
-    SelectServiceScreen(onBack = {})
+    SelectServiceScreen(navController = rememberNavController())
 }
