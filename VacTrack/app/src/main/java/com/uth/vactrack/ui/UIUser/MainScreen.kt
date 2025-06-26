@@ -2,6 +2,8 @@ package com.uth.vactrack.ui.UIUser
 
 import androidx.compose.foundation.*
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.lazy.LazyRow
+import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -202,44 +204,69 @@ fun MainScreen(navController: NavController) {
 
             Text("Your Appointment", fontWeight = FontWeight.Bold, fontSize = 18.sp)
             Spacer(modifier = Modifier.height(8.dp))
-            Card(
-                modifier = Modifier.fillMaxWidth(),
-                shape = RoundedCornerShape(16.dp),
-                elevation = CardDefaults.cardElevation(4.dp),
-                colors = CardDefaults.cardColors(containerColor = Color.White)
-            ) {
-                Column(modifier = Modifier.padding(16.dp)) {
-                    Row(verticalAlignment = Alignment.CenterVertically) {
-                        Box(
-                            modifier = Modifier
-                                .size(36.dp)
-                                .background(Color(0xFF91C6FF), CircleShape),
-                            contentAlignment = Alignment.Center
-                        ) {
-                            Text("GM", color = Color.White, fontWeight = FontWeight.Bold)
+
+            val appointments = listOf(
+                Triple("General Hospital", "Injection Vaccine (HPV, HIB)", "12/05/2025" to "8:00 AM - 9:00 AM"),
+                Triple("City Hospital", "COVID-19 Vaccine", "14/05/2025" to "10:00 AM - 11:00 AM"),
+                Triple("Clinic A", "Flu Shot", "16/05/2025" to "1:00 PM - 2:00 PM")
+            )
+
+            LazyRow(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
+                items(appointments) { (facility, service, datetime) ->
+                    Card(
+                        modifier = Modifier
+                            .width(280.dp),
+                        shape = RoundedCornerShape(16.dp),
+                        elevation = CardDefaults.cardElevation(4.dp),
+                        colors = CardDefaults.cardColors(containerColor = Color.White)
+                    ) {
+                        Column(modifier = Modifier.padding(16.dp)) {
+                            Row(verticalAlignment = Alignment.CenterVertically) {
+                                Box(
+                                    modifier = Modifier
+                                        .size(36.dp)
+                                        .background(Color(0xFF91C6FF), CircleShape),
+                                    contentAlignment = Alignment.Center
+                                ) {
+                                    Text(
+                                        text = facility.take(2).uppercase(),
+                                        color = Color.White,
+                                        fontWeight = FontWeight.Bold
+                                    )
+                                }
+                                Spacer(modifier = Modifier.width(12.dp))
+                                Column(modifier = Modifier.weight(1f)) {
+                                    Text(facility, fontWeight = FontWeight.Bold, fontSize = 16.sp)
+                                    Text(service, fontSize = 14.sp, color = Color.Gray)
+                                }
+                                Icon(
+                                    painter = painterResource(id = R.drawable.ic_location),
+                                    contentDescription = "Map",
+                                    tint = Color.Gray,
+                                    modifier = Modifier.size(20.dp)
+                                )
+                            }
+                            Spacer(modifier = Modifier.height(8.dp))
+                            Row(verticalAlignment = Alignment.CenterVertically) {
+                                Icon(
+                                    painter = painterResource(id = R.drawable.ic_calendar),
+                                    contentDescription = null,
+                                    tint = Color.Gray,
+                                    modifier = Modifier.size(16.dp)
+                                )
+                                Spacer(modifier = Modifier.width(4.dp))
+                                Text(datetime.first, fontSize = 14.sp)
+                                Spacer(modifier = Modifier.width(12.dp))
+                                Icon(
+                                    painter = painterResource(id = R.drawable.ic_clock),
+                                    contentDescription = null,
+                                    tint = Color.Gray,
+                                    modifier = Modifier.size(16.dp)
+                                )
+                                Spacer(modifier = Modifier.width(4.dp))
+                                Text(datetime.second, fontSize = 14.sp)
+                            }
                         }
-                        Spacer(modifier = Modifier.width(12.dp))
-                        Column {
-                            Text("General Hospital", fontWeight = FontWeight.Bold, fontSize = 16.sp)
-                            Text("Injection Vaccine (HPV, HIB)", fontSize = 14.sp, color = Color.Gray)
-                        }
-                        Spacer(modifier = Modifier.weight(1f))
-                        Icon(
-                            painter = painterResource(id = R.drawable.ic_location),
-                            contentDescription = "Map",
-                            tint = Color.Gray,
-                            modifier = Modifier.size(20.dp)
-                        )
-                    }
-                    Spacer(modifier = Modifier.height(8.dp))
-                    Row(verticalAlignment = Alignment.CenterVertically) {
-                        Icon(painter = painterResource(id = R.drawable.ic_calendar), contentDescription = null, tint = Color.Gray, modifier = Modifier.size(16.dp))
-                        Spacer(modifier = Modifier.width(4.dp))
-                        Text("12/05/2025", fontSize = 14.sp)
-                        Spacer(modifier = Modifier.width(12.dp))
-                        Icon(painter = painterResource(id = R.drawable.ic_clock), contentDescription = null, tint = Color.Gray, modifier = Modifier.size(16.dp))
-                        Spacer(modifier = Modifier.width(4.dp))
-                        Text("8:00 AM - 9:00 AM", fontSize = 14.sp)
                     }
                 }
             }

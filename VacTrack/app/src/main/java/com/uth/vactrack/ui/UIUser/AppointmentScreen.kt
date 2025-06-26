@@ -1,7 +1,6 @@
 package com.uth.vactrack.ui.UIUser
 
-import androidx.compose.foundation.Image
-import androidx.compose.foundation.background
+import androidx.compose.foundation.*
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
@@ -34,6 +33,16 @@ fun AppointmentScreen(
     val birthday = remember { mutableStateOf("") }
     val phone = remember { mutableStateOf("") }
     val insuranceId = remember { mutableStateOf("") }
+
+    val isBirthdayValid = birthday.value.matches(
+        Regex("""^(0[1-9]|[12][0-9]|3[01])/(0[1-9]|1[0-2])/(\d{4})$""")
+    )
+    val isPhoneValid = phone.value.length in 10..12 && phone.value.all { it.isDigit() }
+    val isFormValid = name.value.isNotBlank() &&
+            birthday.value.isNotBlank() && isBirthdayValid &&
+            phone.value.isNotBlank() && isPhoneValid &&
+            insuranceId.value.isNotBlank()
+
     val appointmentHistory = listOf(1, 2, 3)
 
     Scaffold(
@@ -73,7 +82,6 @@ fun AppointmentScreen(
             BottomNavigationBar(selectedIndex = 1)
         }
     ) { innerPadding ->
-
         LazyColumn(
             modifier = Modifier
                 .fillMaxSize()
@@ -103,10 +111,14 @@ fun AppointmentScreen(
                     onInsuranceIdChange = { insuranceId.value = it }
                 )
             }
+
             item {
-                ContinueButton(onClick = {
-                    navController.navigate("select_service")
-                })
+                ContinueButton(
+                    enabled = isFormValid,
+                    onClick = {
+                        navController.navigate("select_service")
+                    }
+                )
             }
 
             item { SectionTitle("Appointment History:") }
@@ -116,6 +128,80 @@ fun AppointmentScreen(
             }
 
             item { Spacer(modifier = Modifier.height(80.dp)) }
+        }
+    }
+}
+
+@Composable
+fun OtherInfoCard(
+    name: String,
+    onNameChange: (String) -> Unit,
+    birthday: String,
+    onBirthdayChange: (String) -> Unit,
+    phone: String,
+    onPhoneChange: (String) -> Unit,
+    insuranceId: String,
+    onInsuranceIdChange: (String) -> Unit
+) {
+    val birthdayValid = birthday.matches(
+        Regex("""^(0[1-9]|[12][0-9]|3[01])/(0[1-9]|1[0-2])/(\d{4})$""")
+    )
+    val phoneValid = phone.length in 10..12 && phone.all { it.isDigit() }
+
+    Card(
+        modifier = Modifier
+            .fillMaxWidth()
+            .shadow(4.dp, RoundedCornerShape(12.dp)),
+        shape = RoundedCornerShape(12.dp),
+        colors = CardDefaults.cardColors(containerColor = Color(0xFF00BCD4))
+    ) {
+        Column(modifier = Modifier.padding(16.dp)) {
+            OutlinedTextField(
+                value = name,
+                onValueChange = onNameChange,
+                label = { Text("Name") },
+                modifier = Modifier.fillMaxWidth(),
+                singleLine = true
+            )
+            Spacer(modifier = Modifier.height(8.dp))
+
+            OutlinedTextField(
+                value = birthday,
+                onValueChange = onBirthdayChange,
+                label = { Text("Birthday (dd/MM/yyyy)") },
+                isError = birthday.isNotBlank() && !birthdayValid,
+                supportingText = {
+                    if (birthday.isNotBlank() && !birthdayValid) {
+                        Text("Invalid format. Use dd/MM/yyyy", color = Color.Red, fontSize = 12.sp)
+                    }
+                },
+                modifier = Modifier.fillMaxWidth(),
+                singleLine = true
+            )
+            Spacer(modifier = Modifier.height(8.dp))
+
+            OutlinedTextField(
+                value = phone,
+                onValueChange = onPhoneChange,
+                label = { Text("Phone") },
+                isError = phone.isNotBlank() && !phoneValid,
+                supportingText = {
+                    if (phone.isNotBlank() && !phoneValid) {
+                        Text("Phone must be 10–12 digits", color = Color.Red, fontSize = 12.sp)
+                    }
+                },
+                modifier = Modifier.fillMaxWidth(),
+                singleLine = true
+            )
+            Spacer(modifier = Modifier.height(8.dp))
+
+            OutlinedTextField(
+                value = insuranceId,
+                onValueChange = onInsuranceIdChange,
+                label = { Text("Health Insurance ID") },
+                modifier = Modifier.fillMaxWidth(),
+                singleLine = true
+            )
         }
     }
 }
@@ -174,73 +260,19 @@ fun AppointmentButton(onClick: () -> Unit) {
 }
 
 @Composable
-fun OtherInfoCard(
-    name: String,
-    onNameChange: (String) -> Unit,
-    birthday: String,
-    onBirthdayChange: (String) -> Unit,
-    phone: String,
-    onPhoneChange: (String) -> Unit,
-    insuranceId: String,
-    onInsuranceIdChange: (String) -> Unit
-) {
-    Card(
-        modifier = Modifier
-            .fillMaxWidth()
-            .shadow(4.dp, RoundedCornerShape(12.dp)),
-        shape = RoundedCornerShape(12.dp),
-        colors = CardDefaults.cardColors(containerColor = Color(0xFF00BCD4))
-    ) {
-        Column(modifier = Modifier.padding(16.dp)) {
-            OutlinedTextField(
-                value = name,
-                onValueChange = onNameChange,
-                label = { Text("Name") },
-                modifier = Modifier.fillMaxWidth(),
-                singleLine = true
-            )
-            Spacer(modifier = Modifier.height(8.dp))
-
-            OutlinedTextField(
-                value = birthday,
-                onValueChange = onBirthdayChange,
-                label = { Text("Birthday") },
-                modifier = Modifier.fillMaxWidth(),
-                singleLine = true
-            )
-            Spacer(modifier = Modifier.height(8.dp))
-
-            OutlinedTextField(
-                value = phone,
-                onValueChange = onPhoneChange,
-                label = { Text("Phone") },
-                modifier = Modifier.fillMaxWidth(),
-                singleLine = true
-            )
-            Spacer(modifier = Modifier.height(8.dp))
-
-            OutlinedTextField(
-                value = insuranceId,
-                onValueChange = onInsuranceIdChange,
-                label = { Text("Health Insurance ID") },
-                modifier = Modifier.fillMaxWidth(),
-                singleLine = true
-            )
-        }
-    }
-}
-
-@Composable
-fun ContinueButton(onClick: () -> Unit) {
+fun ContinueButton(enabled: Boolean = true, onClick: () -> Unit) {
     Box(modifier = Modifier.fillMaxWidth()) {
         Button(
             onClick = onClick,
+            enabled = enabled,
             modifier = Modifier
                 .align(Alignment.Center)
                 .height(40.dp)
                 .width(120.dp),
             shape = RoundedCornerShape(20.dp),
-            colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF00BCD4))
+            colors = ButtonDefaults.buttonColors(
+                containerColor = if (enabled) Color(0xFF00BCD4) else Color.LightGray
+            )
         ) {
             Icon(
                 painter = painterResource(id = R.drawable.ic_arrow_move),
