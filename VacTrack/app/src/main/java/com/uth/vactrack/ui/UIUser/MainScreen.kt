@@ -1,13 +1,13 @@
 package com.uth.vactrack.ui.UIUser
 
+import android.content.Intent
+import android.net.Uri
 import androidx.compose.foundation.*
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
-import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material3.*
@@ -16,6 +16,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
@@ -100,6 +101,8 @@ fun BottomNavigationBar(
 
 @Composable
 fun MainScreen(navController: NavController) {
+    val context = LocalContext.current
+
     Scaffold(
         bottomBar = {
             BottomNavigationBar(
@@ -141,9 +144,9 @@ fun MainScreen(navController: NavController) {
             }
 
             val features = listOf(
-                Triple(R.drawable.ic_book, "Book an Appointment", "Fast and easy booking with minimal steps"),
-                Triple(R.drawable.ic_location, "Locate Vaccine Facility", "Locate a nearby facility"),
-                Triple(R.drawable.ic_emergency, "Request an Emergency", "Request an emergency service")
+                Triple(R.drawable.ic_book, "Book an Appointment", "Fast and easy booking"),
+                Triple(R.drawable.ic_location, "Locate Vaccine Facility", "Bệnh viện Gia Định"),
+                Triple(R.drawable.ic_emergency, "Request an Emergency", "Immediate support")
             )
 
             val featureColors = listOf(
@@ -158,17 +161,30 @@ fun MainScreen(navController: NavController) {
                         .fillMaxWidth()
                         .padding(vertical = 8.dp)
                         .clickable {
-                            if (title == "Book an Appointment") {
-                                navController.navigate("appointment")
+                            when (title) {
+                                "Book an Appointment" -> navController.navigate("appointment")
+                                "Locate Vaccine Facility" -> {
+                                    val ggmaps = Intent(
+                                        Intent.ACTION_VIEW,
+                                        Uri.parse("geo:0,0?q=Bệnh+viện+Gia+Định,+Hồ+Chí+Minh")
+                                    ).apply {
+                                        setPackage("com.google.android.apps.maps")
+                                    }
+                                    context.startActivity(ggmaps)
+                                }
+                                "Request an Emergency" -> {
+                                    val callIntent = Intent(Intent.ACTION_DIAL).apply {
+                                        data = Uri.parse("tel:02838412692")
+                                    }
+                                    context.startActivity(callIntent)
+                                }
                             }
                         },
                     shape = RoundedCornerShape(16.dp),
                     colors = CardDefaults.cardColors(containerColor = featureColors[index % featureColors.size])
                 ) {
                     Row(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .padding(16.dp),
+                        modifier = Modifier.padding(16.dp),
                         verticalAlignment = Alignment.CenterVertically,
                         horizontalArrangement = Arrangement.SpaceBetween
                     ) {
@@ -192,7 +208,6 @@ fun MainScreen(navController: NavController) {
                                 Text(subtitle, fontSize = 14.sp, color = Color.Gray)
                             }
                         }
-
                         Icon(
                             painter = painterResource(id = R.drawable.ic_arrow_move),
                             contentDescription = "Go",
@@ -209,9 +224,8 @@ fun MainScreen(navController: NavController) {
             Spacer(modifier = Modifier.height(8.dp))
 
             val appointments = listOf(
-                Triple("General Hospital", "Injection Vaccine (HPV, HIB)", "12/05/2025" to "8:00 AM - 9:00 AM"),
-                Triple("City Hospital", "COVID-19 Vaccine", "14/05/2025" to "10:00 AM - 11:00 AM"),
-                Triple("Clinic A", "Flu Shot", "16/05/2025" to "1:00 PM - 2:00 PM")
+                Triple("General Hospital", "HPV, HIB Vaccine", "12/05/2025" to "8:00 AM - 9:00 AM"),
+                Triple("City Hospital", "COVID-19 Vaccine", "14/05/2025" to "10:00 AM - 11:00 AM")
             )
 
             LazyRow(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
