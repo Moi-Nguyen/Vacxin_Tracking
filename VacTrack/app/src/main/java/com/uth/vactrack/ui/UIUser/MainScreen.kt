@@ -141,13 +141,7 @@ fun MainScreen(navController: NavController) {
                 Triple(R.drawable.ic_emergency, "Request an Emergency", "Immediate support")
             )
 
-            val featureColors = listOf(
-                MaterialTheme.colorScheme.surfaceVariant,
-                MaterialTheme.colorScheme.surfaceVariant,
-                MaterialTheme.colorScheme.surfaceVariant
-            )
-
-            features.forEachIndexed { index, (icon, title, subtitle) ->
+            features.forEach { (icon, title, subtitle) ->
                 Card(
                     modifier = Modifier
                         .fillMaxWidth()
@@ -173,7 +167,7 @@ fun MainScreen(navController: NavController) {
                             }
                         },
                     shape = RoundedCornerShape(16.dp),
-                    colors = CardDefaults.cardColors(containerColor = featureColors[index])
+                    colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant)
                 ) {
                     Row(
                         modifier = Modifier.padding(16.dp),
@@ -297,11 +291,16 @@ fun MainScreen(navController: NavController) {
                     Column(
                         horizontalAlignment = Alignment.CenterHorizontally,
                         modifier = Modifier.clickable {
-                            if (label == "Vaccination") {
-                                navController.navigate("appointment")
-                            } else if (label == "Screening") {
-                                val browserIntent = Intent(Intent.ACTION_VIEW, Uri.parse("https://vnvc.vn/"))
-                                context.startActivity(browserIntent)
+                            when (label) {
+                                "Vaccination" -> navController.navigate("appointment")
+                                "Screening" -> {
+                                    val browserIntent = Intent(Intent.ACTION_VIEW, Uri.parse("https://vnvc.vn/"))
+                                    context.startActivity(browserIntent)
+                                }
+                                "Consultation" -> {
+                                    val fbIntent = Intent(Intent.ACTION_VIEW, Uri.parse("https://www.facebook.com/trungtamtiemchungvnvc"))
+                                    context.startActivity(fbIntent)
+                                }
                             }
                         }
                     ) {
