@@ -132,5 +132,10 @@ fun UserNavHost(navController: NavHostController = rememberNavController()) {
                 }
             )
         }
+
+        // ✅ Profile screen
+        composable("profile") {
+            ProfileScreen(onBack = { navController.popBackStack() })
+        }
     }
 }

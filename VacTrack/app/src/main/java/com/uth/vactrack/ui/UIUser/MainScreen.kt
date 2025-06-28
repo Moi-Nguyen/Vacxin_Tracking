@@ -134,6 +134,9 @@ fun MainScreen(navController: NavController) {
                     modifier = Modifier
                         .size(48.dp)
                         .clip(CircleShape)
+                        .clickable {
+                            navController.navigate("profile")
+                        }
                 )
             }
 
@@ -214,8 +217,7 @@ fun MainScreen(navController: NavController) {
             LazyRow(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
                 items(appointments) { (facility, service, datetime) ->
                     Card(
-                        modifier = Modifier
-                            .width(280.dp),
+                        modifier = Modifier.width(280.dp),
                         shape = RoundedCornerShape(16.dp),
                         elevation = CardDefaults.cardElevation(4.dp),
                         colors = CardDefaults.cardColors(containerColor = Color.White)

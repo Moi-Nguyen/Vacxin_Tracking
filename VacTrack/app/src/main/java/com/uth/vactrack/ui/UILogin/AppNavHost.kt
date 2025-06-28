@@ -120,6 +120,7 @@ fun AppNavHost(startDestination: String = "login") {
         // Home
         composable("home") {
             HomeScreen(
+                navController = navController,
                 onLearnMoreClick = {
                     navController.navigate("main")
                 }
@@ -244,6 +245,11 @@ fun AppNavHost(startDestination: String = "login") {
                     }
                 }
             )
+        }
+
+        // ✅ Profile
+        composable("profile") {
+            ProfileScreen(onBack = { navController.popBackStack() })
         }
     }
 }

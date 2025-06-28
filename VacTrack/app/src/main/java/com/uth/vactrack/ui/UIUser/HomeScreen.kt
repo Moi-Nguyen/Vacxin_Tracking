@@ -6,22 +6,30 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.*
-import androidx.compose.runtime.Composable
+import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import androidx.compose.ui.tooling.preview.Preview
+import androidx.navigation.NavController
+import androidx.navigation.compose.rememberNavController
 import com.uth.vactrack.R
 
 @Composable
-fun HomeScreen(onLearnMoreClick: () -> Unit = {}) {
+fun HomeScreen(
+    navController: NavController = rememberNavController(),
+    onLearnMoreClick: () -> Unit = {}
+) {
+    var menuExpanded by remember { mutableStateOf(false) }
+
     Column(
         modifier = Modifier
             .fillMaxSize()
@@ -50,6 +58,9 @@ fun HomeScreen(onLearnMoreClick: () -> Unit = {}) {
                 modifier = Modifier
                     .size(60.dp)
                     .clip(CircleShape)
+                    .clickable {
+                        navController.navigate("profile")
+                    }
             )
         }
 
@@ -78,12 +89,46 @@ fun HomeScreen(onLearnMoreClick: () -> Unit = {}) {
                         .size(45.dp)
                         .padding(end = 10.dp)
                 )
-                Icon(
-                    painter = painterResource(id = R.drawable.ic_menu),
-                    contentDescription = "Menu",
-                    tint = Color.White,
-                    modifier = Modifier.size(40.dp)
-                )
+                Box {
+                    Icon(
+                        painter = painterResource(id = R.drawable.ic_menu),
+                        contentDescription = "Menu",
+                        tint = Color.White,
+                        modifier = Modifier
+                            .size(40.dp)
+                            .clickable { menuExpanded = true }
+                    )
+
+                    DropdownMenu(
+                        expanded = menuExpanded,
+                        onDismissRequest = { menuExpanded = false },
+                        modifier = Modifier
+                            .background(Color(0xFF2D25C9), shape = RoundedCornerShape(8.dp))
+                    ) {
+                        DropdownMenuItem(
+                            text = {
+                                Text("Feedback", color = Color.White, fontSize = 14.sp)
+                            },
+                            onClick = {
+                                menuExpanded = false
+                                navController.navigate("feedback")
+                            },
+                            colors = MenuDefaults.itemColors(textColor = Color.White)
+                        )
+                        DropdownMenuItem(
+                            text = {
+                                Text("Logout", color = Color.White, fontSize = 14.sp)
+                            },
+                            onClick = {
+                                menuExpanded = false
+                                navController.navigate("login") {
+                                    popUpTo("login") { inclusive = true }
+                                }
+                            },
+                            colors = MenuDefaults.itemColors(textColor = Color.White)
+                        )
+                    }
+                }
             }
         }
 
@@ -108,12 +153,11 @@ fun HomeScreen(onLearnMoreClick: () -> Unit = {}) {
         )
 
         // ===== Learn More =====
-        // ===== Learn More =====
         Row(
             modifier = Modifier
                 .fillMaxWidth()
                 .padding(top = 12.dp)
-                .clickable { onLearnMoreClick() }, // Đặt clickable ở cả Row
+                .clickable { onLearnMoreClick() },
             horizontalArrangement = Arrangement.Center,
             verticalAlignment = Alignment.CenterVertically
         ) {
@@ -122,7 +166,7 @@ fun HomeScreen(onLearnMoreClick: () -> Unit = {}) {
                 color = Color(0xFF1A237E),
                 fontSize = 16.sp,
                 fontWeight = FontWeight.Medium,
-                modifier = Modifier.padding(4.dp) // Chỉ padding, KHÔNG cần clickable ở đây
+                modifier = Modifier.padding(4.dp)
             )
             Icon(
                 painter = painterResource(id = R.drawable.ic_arrow_move),
@@ -133,7 +177,6 @@ fun HomeScreen(onLearnMoreClick: () -> Unit = {}) {
                     .padding(start = 4.dp)
             )
         }
-
 
         // ===== Info Section =====
         Image(
@@ -150,7 +193,5 @@ fun HomeScreen(onLearnMoreClick: () -> Unit = {}) {
 @Preview(showBackground = true, showSystemUi = true)
 @Composable
 fun HomeScreenPreview() {
-    MaterialTheme {
-        HomeScreen()
-    }
+    HomeScreen()
 }
