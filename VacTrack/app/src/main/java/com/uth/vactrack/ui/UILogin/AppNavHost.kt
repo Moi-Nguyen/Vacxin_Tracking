@@ -10,7 +10,11 @@ import java.net.URLEncoder
 import java.nio.charset.StandardCharsets
 
 @Composable
-fun AppNavHost(startDestination: String = "login") {
+fun AppNavHost(
+    startDestination: String = "login",
+    isDarkTheme: Boolean = false,
+    onToggleTheme: () -> Unit = {}
+) {
     val navController = rememberNavController()
     var loginEmail by remember { mutableStateOf("") }
 
@@ -232,7 +236,9 @@ fun AppNavHost(startDestination: String = "login") {
         composable("profile") {
             ProfileScreen(
                 navController = navController,
-                onBack = { navController.popBackStack() }
+                onBack = { navController.popBackStack() },
+                isDarkTheme = isDarkTheme,
+                onToggleTheme = onToggleTheme
             )
         }
 

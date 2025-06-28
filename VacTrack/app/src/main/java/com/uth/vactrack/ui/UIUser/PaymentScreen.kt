@@ -4,16 +4,16 @@ import android.net.Uri
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
-import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
@@ -30,21 +30,20 @@ fun PaymentScreen(
     serviceName: String,
     selectedDate: String,
     selectedTime: String,
-    bill: Int, // bill in thousands (e.g., 100 = 100.000đ)
+    bill: Int,
     onBack: () -> Unit = {},
     onCancel: () -> Unit = {},
     onPay: () -> Unit = {}
 ) {
+    // QR Info
     val bankId = "ACB"
     val accountNumber = "39598507"
     val template = "compact2"
     val accountName = "Nguyen Duc Luong"
-    val amount = bill * 1000 // Convert to VNĐ
+    val amount = bill * 1000
     val addInfo = "thanh toan Vactrack voi so tien ${amount}đ"
-
     val encodedInfo = URLEncoder.encode(addInfo, "UTF-8")
     val encodedName = URLEncoder.encode(accountName, "UTF-8")
-
     val qrUrl = "https://img.vietqr.io/image/$bankId-$accountNumber-$template.png" +
             "?amount=$amount&addInfo=$encodedInfo&accountName=$encodedName"
 
@@ -52,15 +51,13 @@ fun PaymentScreen(
         topBar = {
             TopAppBar(
                 title = {
-                    Row(
-                        verticalAlignment = Alignment.CenterVertically,
-                        horizontalArrangement = Arrangement.spacedBy(8.dp)
-                    ) {
+                    Row(verticalAlignment = Alignment.CenterVertically) {
                         Image(
                             painter = painterResource(id = R.drawable.img_logo_xoanen),
                             contentDescription = "Logo",
                             modifier = Modifier.size(52.dp)
                         )
+                        Spacer(modifier = Modifier.width(8.dp))
                         Text("Payment", fontWeight = FontWeight.Bold, fontSize = 22.sp)
                     }
                 },
@@ -90,10 +87,11 @@ fun PaymentScreen(
             modifier = Modifier
                 .padding(innerPadding)
                 .fillMaxSize()
+                .verticalScroll(rememberScrollState())
                 .padding(horizontal = 20.dp, vertical = 16.dp),
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
-            // Step Progress
+            // Step progress
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.spacedBy(4.dp)
@@ -104,7 +102,8 @@ fun PaymentScreen(
                             .weight(1f)
                             .height(6.dp)
                             .background(
-                                if (index <= 2) Color(0xFF00BCD4) else Color.LightGray,
+                                if (index <= 2) MaterialTheme.colorScheme.primary
+                                else MaterialTheme.colorScheme.surfaceVariant,
                                 RoundedCornerShape(4.dp)
                             )
                     )
@@ -113,11 +112,11 @@ fun PaymentScreen(
 
             Spacer(modifier = Modifier.height(24.dp))
 
-            // Appointment Info Card
+            // Info card
             Card(
                 modifier = Modifier.fillMaxWidth(),
                 shape = RoundedCornerShape(20.dp),
-                colors = CardDefaults.cardColors(containerColor = Color(0xFFF2F2F2))
+                colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant)
             ) {
                 Column(modifier = Modifier.padding(24.dp)) {
                     Row(verticalAlignment = Alignment.CenterVertically) {
@@ -130,19 +129,19 @@ fun PaymentScreen(
                         )
                         Spacer(modifier = Modifier.width(16.dp))
                         Column {
-                            Text("Nguyen Van A", fontWeight = FontWeight.Bold, fontSize = 21.sp)
-                            Text("Service: $serviceName", fontSize = 18.sp)
-                            Text("Facility: Gia Dinh Hospital", fontSize = 18.sp)
+                            Text("Nguyen Van A", fontWeight = FontWeight.Bold, fontSize = 20.sp, color = MaterialTheme.colorScheme.onSurface)
+                            Text("Service: $serviceName", fontSize = 16.sp, color = MaterialTheme.colorScheme.onSurface)
+                            Text("Facility: Gia Dinh Hospital", fontSize = 16.sp, color = MaterialTheme.colorScheme.onSurface)
                             Spacer(modifier = Modifier.height(8.dp))
                             Row(verticalAlignment = Alignment.CenterVertically) {
                                 Icon(
                                     painter = painterResource(id = R.drawable.ic_calendar),
                                     contentDescription = null,
-                                    tint = Color.Gray,
+                                    tint = MaterialTheme.colorScheme.onSurface,
                                     modifier = Modifier.size(20.dp)
                                 )
                                 Spacer(modifier = Modifier.width(6.dp))
-                                Text("$selectedDate   $selectedTime", fontSize = 17.sp)
+                                Text("$selectedDate   $selectedTime", fontSize = 16.sp, color = MaterialTheme.colorScheme.onSurface)
                             }
                         }
                     }
@@ -152,12 +151,12 @@ fun PaymentScreen(
                         "Hospital bill: ${bill}.000đ",
                         fontWeight = FontWeight.Bold,
                         fontSize = 20.sp,
-                        color = Color(0xFF222222)
+                        color = MaterialTheme.colorScheme.onSurface
                     )
                 }
             }
 
-            Spacer(modifier = Modifier.height(28.dp))
+            Spacer(modifier = Modifier.height(24.dp))
 
             // QR Code
             AsyncImage(
@@ -165,15 +164,18 @@ fun PaymentScreen(
                 contentDescription = "QR VietQR",
                 contentScale = ContentScale.Fit,
                 modifier = Modifier
-                    .size(500.dp) // enlarged size
+                    .width(450.dp)
+                    .height(420.dp)
                     .padding(8.dp)
             )
 
             Spacer(modifier = Modifier.height(24.dp))
 
-            // Action Buttons
+            // Buttons
             Row(
-                modifier = Modifier.fillMaxWidth(),
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(bottom = 12.dp),
                 horizontalArrangement = Arrangement.spacedBy(16.dp)
             ) {
                 OutlinedButton(
@@ -185,7 +187,7 @@ fun PaymentScreen(
                 Button(
                     onClick = onPay,
                     modifier = Modifier.weight(2f),
-                    colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF00BCD4))
+                    colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.primary)
                 ) {
                     Text("Direct Payment", fontSize = 16.sp)
                     Spacer(modifier = Modifier.width(8.dp))
@@ -204,10 +206,10 @@ fun PaymentScreen(
 fun PaymentScreenPreview() {
     VacTrackTheme {
         PaymentScreen(
-            serviceName = "Outpatient Vaccination",
+            serviceName = "Vaccine Services",
             selectedDate = "Tuesday, 13 May 2025",
             selectedTime = "9:00 AM",
-            bill = 200
+            bill = 100
         )
     }
 }

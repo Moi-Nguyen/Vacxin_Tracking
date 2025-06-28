@@ -80,16 +80,16 @@ fun SelectTimeAndSlotScreen(
             modifier = Modifier
                 .fillMaxSize()
                 .padding(innerPadding)
-                .background(Color.White)
+                .background(MaterialTheme.colorScheme.background)
                 .padding(horizontal = 16.dp),
             verticalArrangement = Arrangement.spacedBy(16.dp)
         ) {
-            // User & service info card
+            // Info card
             item {
                 Card(
                     modifier = Modifier.fillMaxWidth(),
                     shape = RoundedCornerShape(12.dp),
-                    colors = CardDefaults.cardColors(containerColor = Color(0xFFF5F5F5))
+                    colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant)
                 ) {
                     Row(
                         modifier = Modifier.padding(16.dp),
@@ -104,9 +104,9 @@ fun SelectTimeAndSlotScreen(
                         )
                         Spacer(modifier = Modifier.width(12.dp))
                         Column {
-                            Text("Nguyen Van A", fontWeight = FontWeight.Bold)
-                            Text("Service: $serviceName")
-                            Text("Facility: Gia Dinh Hospital")
+                            Text("Nguyen Van A", fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.onSurface)
+                            Text("Service: $serviceName", color = MaterialTheme.colorScheme.onSurface)
+                            Text("Facility: Gia Dinh Hospital", color = MaterialTheme.colorScheme.onSurface)
                         }
                     }
                 }
@@ -124,7 +124,7 @@ fun SelectTimeAndSlotScreen(
                                 .weight(1f)
                                 .height(6.dp)
                                 .background(
-                                    if (index <= 2) Color(0xFF00BCD4) else Color.LightGray,
+                                    if (index <= 2) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.surfaceVariant,
                                     RoundedCornerShape(4.dp)
                                 )
                         )
@@ -138,43 +138,47 @@ fun SelectTimeAndSlotScreen(
                 Card(
                     modifier = Modifier.fillMaxWidth(),
                     shape = RoundedCornerShape(12.dp),
-                    colors = CardDefaults.cardColors(containerColor = Color(0xFFEAEAEA))
+                    colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface)
                 ) {
                     Column(modifier = Modifier.padding(16.dp)) {
-                        Text("Gia Dinh Hospital", fontWeight = FontWeight.Bold)
-                        Text("1D, No Trang Long, Phuong 7, Binh Thanh, Ho Chi Minh")
-                        Text("Open • Weekday • 8 am - 5 pm", fontSize = 12.sp, color = Color.Gray)
+                        Text("Gia Dinh Hospital", fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.onSurface)
+                        Text("1D, No Trang Long, Phuong 7, Binh Thanh, Ho Chi Minh", color = MaterialTheme.colorScheme.onSurface)
+                        Text(
+                            "Open • Weekday • 8 am - 5 pm",
+                            fontSize = 12.sp,
+                            color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.7f)
+                        )
                     }
                 }
             }
 
-            // Header for slots
+            // Available slots
             item {
                 Row(
                     modifier = Modifier.fillMaxWidth(),
                     horizontalArrangement = Arrangement.SpaceBetween,
                     verticalAlignment = Alignment.CenterVertically
                 ) {
-                    Text("Available Slots", fontWeight = FontWeight.Bold)
+                    Text("Available Slots", fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.onBackground)
                     Button(
                         onClick = { },
-                        colors = ButtonDefaults.buttonColors(containerColor = Color.White)
+                        colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.surface)
                     ) {
                         Icon(
                             painter = painterResource(id = R.drawable.ic_calendar),
                             contentDescription = null,
-                            tint = Color.Black
+                            tint = MaterialTheme.colorScheme.onSurface
                         )
                         Spacer(modifier = Modifier.width(4.dp))
-                        Text("Select Date", color = Color.Black)
+                        Text("Select Date", color = MaterialTheme.colorScheme.onSurface)
                     }
                 }
             }
 
-            // Slots per day
+            // Slot rows
             slotData.forEach { (date, times) ->
                 item {
-                    Text(date, fontWeight = FontWeight.Medium)
+                    Text(date, fontWeight = FontWeight.Medium, color = MaterialTheme.colorScheme.onBackground)
                     Spacer(modifier = Modifier.height(4.dp))
                     LazyRow(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                         items(times) { time ->
@@ -187,9 +191,9 @@ fun SelectTimeAndSlotScreen(
                                     navController.navigate("payment/$encodedService/$encodedDate/$encodedTime/$bill")
                                 },
                                 shape = RoundedCornerShape(20.dp),
-                                colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF4CAF50))
+                                colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.primary)
                             ) {
-                                Text(time, color = Color.White)
+                                Text(time, color = MaterialTheme.colorScheme.onPrimary)
                             }
                         }
                     }

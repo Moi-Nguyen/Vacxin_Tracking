@@ -43,7 +43,7 @@ fun AppointmentScreen(
             phone.value.isNotBlank() && isPhoneValid &&
             insuranceId.value.isNotBlank()
 
-    val appointmentHistory = listOf(1, 2, 3)
+    val appointmentHistory = listOf(1)
 
     Scaffold(
         topBar = {
@@ -86,7 +86,7 @@ fun AppointmentScreen(
             modifier = Modifier
                 .fillMaxSize()
                 .padding(innerPadding)
-                .background(Color.White),
+                .background(MaterialTheme.colorScheme.background),
             contentPadding = PaddingValues(horizontal = 16.dp, vertical = 12.dp),
             verticalArrangement = Arrangement.spacedBy(12.dp)
         ) {
@@ -122,11 +122,9 @@ fun AppointmentScreen(
             }
 
             item { SectionTitle("Appointment History:") }
-
             items(appointmentHistory) {
                 AppointmentHistoryCard()
             }
-
             item { Spacer(modifier = Modifier.height(80.dp)) }
         }
     }
@@ -143,9 +141,7 @@ fun OtherInfoCard(
     insuranceId: String,
     onInsuranceIdChange: (String) -> Unit
 ) {
-    val birthdayValid = birthday.matches(
-        Regex("""^(0[1-9]|[12][0-9]|3[01])/(0[1-9]|1[0-2])/(\d{4})$""")
-    )
+    val birthdayValid = birthday.matches(Regex("""^(0[1-9]|[12][0-9]|3[01])/(0[1-9]|1[0-2])/(\d{4})$"""))
     val phoneValid = phone.length in 10..12 && phone.all { it.isDigit() }
 
     Card(
@@ -153,7 +149,7 @@ fun OtherInfoCard(
             .fillMaxWidth()
             .shadow(4.dp, RoundedCornerShape(12.dp)),
         shape = RoundedCornerShape(12.dp),
-        colors = CardDefaults.cardColors(containerColor = Color(0xFF00BCD4))
+        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant)
     ) {
         Column(modifier = Modifier.padding(16.dp)) {
             OutlinedTextField(
@@ -172,7 +168,11 @@ fun OtherInfoCard(
                 isError = birthday.isNotBlank() && !birthdayValid,
                 supportingText = {
                     if (birthday.isNotBlank() && !birthdayValid) {
-                        Text("Invalid format. Use dd/MM/yyyy", color = Color.Red, fontSize = 12.sp)
+                        Text(
+                            "Invalid format. Use dd/MM/yyyy",
+                            color = MaterialTheme.colorScheme.error,
+                            fontSize = 12.sp
+                        )
                     }
                 },
                 modifier = Modifier.fillMaxWidth(),
@@ -187,7 +187,11 @@ fun OtherInfoCard(
                 isError = phone.isNotBlank() && !phoneValid,
                 supportingText = {
                     if (phone.isNotBlank() && !phoneValid) {
-                        Text("Phone must be 10–12 digits", color = Color.Red, fontSize = 12.sp)
+                        Text(
+                            "Phone must be 10–12 digits",
+                            color = MaterialTheme.colorScheme.error,
+                            fontSize = 12.sp
+                        )
                     }
                 },
                 modifier = Modifier.fillMaxWidth(),
@@ -208,15 +212,15 @@ fun OtherInfoCard(
 
 @Composable
 fun SectionTitle(title: String) {
-    Text(title, fontWeight = FontWeight.Bold, fontSize = 16.sp)
+    Text(title, fontWeight = FontWeight.Bold, fontSize = 16.sp, color = MaterialTheme.colorScheme.onBackground)
 }
 
 @Composable
 fun AppointmentCard() {
     Card(
         shape = RoundedCornerShape(12.dp),
-        colors = CardDefaults.cardColors(containerColor = Color.White),
-        elevation = CardDefaults.cardElevation(defaultElevation = 2.dp),
+        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
+        elevation = CardDefaults.cardElevation(2.dp),
         modifier = Modifier.fillMaxWidth()
     ) {
         Row(
@@ -231,10 +235,11 @@ fun AppointmentCard() {
                     .clip(CircleShape)
             )
             Spacer(modifier = Modifier.width(12.dp))
-            Text("Nguyen Van A", fontWeight = FontWeight.Bold, modifier = Modifier.weight(1f))
+            Text("Nguyen Van A", fontWeight = FontWeight.Bold, modifier = Modifier.weight(1f), color = MaterialTheme.colorScheme.onSurface)
             Icon(
                 painter = painterResource(id = R.drawable.ic_arrow_dropdown),
-                contentDescription = "Dropdown"
+                contentDescription = "Dropdown",
+                tint = MaterialTheme.colorScheme.onSurface
             )
         }
     }
@@ -248,7 +253,7 @@ fun AppointmentButton(onClick: () -> Unit) {
             .fillMaxWidth()
             .height(44.dp),
         shape = RoundedCornerShape(24.dp),
-        colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF00BCD4))
+        colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.primary)
     ) {
         Text("Book for an appointment")
         Spacer(modifier = Modifier.width(8.dp))
@@ -271,7 +276,7 @@ fun ContinueButton(enabled: Boolean = true, onClick: () -> Unit) {
                 .width(120.dp),
             shape = RoundedCornerShape(20.dp),
             colors = ButtonDefaults.buttonColors(
-                containerColor = if (enabled) Color(0xFF00BCD4) else Color.LightGray
+                containerColor = if (enabled) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.surfaceVariant
             )
         ) {
             Icon(
@@ -286,7 +291,7 @@ fun ContinueButton(enabled: Boolean = true, onClick: () -> Unit) {
 fun AppointmentHistoryCard() {
     Card(
         shape = RoundedCornerShape(12.dp),
-        colors = CardDefaults.cardColors(containerColor = Color.White),
+        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
         elevation = CardDefaults.cardElevation(2.dp),
         modifier = Modifier.fillMaxWidth()
     ) {
@@ -295,20 +300,20 @@ fun AppointmentHistoryCard() {
                 Box(
                     modifier = Modifier
                         .size(36.dp)
-                        .background(Color(0xFF0097A7), CircleShape),
+                        .background(MaterialTheme.colorScheme.primary, CircleShape),
                     contentAlignment = Alignment.Center
                 ) {
                     Text("GM", color = Color.White, fontWeight = FontWeight.Bold)
                 }
                 Spacer(modifier = Modifier.width(12.dp))
                 Column(modifier = Modifier.weight(1f)) {
-                    Text("Gia Dinh Hospital", fontWeight = FontWeight.Bold)
-                    Text("Vaccine Advice", fontSize = 12.sp, color = Color.Gray)
+                    Text("Gia Dinh Hospital", fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.onSurface)
+                    Text("Vaccine Advice", fontSize = 12.sp, color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.7f))
                 }
                 Icon(
                     painter = painterResource(id = R.drawable.ic_location),
                     contentDescription = "Location",
-                    tint = Color.Gray,
+                    tint = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f),
                     modifier = Modifier.size(20.dp)
                 )
             }
@@ -319,31 +324,31 @@ fun AppointmentHistoryCard() {
                 Icon(
                     painter = painterResource(id = R.drawable.ic_calendar),
                     contentDescription = "Calendar",
-                    tint = Color.Gray,
+                    tint = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f),
                     modifier = Modifier.size(16.dp)
                 )
                 Spacer(modifier = Modifier.width(4.dp))
-                Text("05/05/2025", fontSize = 12.sp)
+                Text("05/05/2025", fontSize = 12.sp, color = MaterialTheme.colorScheme.onSurface)
 
                 Spacer(modifier = Modifier.width(12.dp))
 
                 Icon(
                     painter = painterResource(id = R.drawable.ic_clock),
                     contentDescription = "Clock",
-                    tint = Color.Gray,
+                    tint = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f),
                     modifier = Modifier.size(16.dp)
                 )
                 Spacer(modifier = Modifier.width(4.dp))
-                Text("1:00 PM", fontSize = 12.sp)
+                Text("1:00 PM", fontSize = 12.sp, color = MaterialTheme.colorScheme.onSurface)
             }
         }
     }
 }
 
-@Preview(showBackground = true, showSystemUi = true, name = "Appointment Screen Preview")
+@Preview(showBackground = true, showSystemUi = true)
 @Composable
 fun AppointmentScreenPreview() {
     VacTrackTheme {
-        AppointmentScreen(navController = rememberNavController())
+        AppointmentScreen()
     }
 }

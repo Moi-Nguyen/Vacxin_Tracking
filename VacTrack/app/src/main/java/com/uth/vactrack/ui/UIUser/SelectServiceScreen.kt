@@ -59,7 +59,7 @@ fun SelectServiceScreen(
                 .fillMaxSize()
                 .padding(innerPadding)
                 .verticalScroll(rememberScrollState())
-                .background(Color.White)
+                .background(MaterialTheme.colorScheme.background)
                 .padding(horizontal = 16.dp, vertical = 8.dp)
         ) {
             // Header
@@ -75,10 +75,15 @@ fun SelectServiceScreen(
                     modifier = Modifier
                         .size(48.dp)
                         .clip(CircleShape)
-                        .background(Color.Gray)
+                        .background(MaterialTheme.colorScheme.surfaceVariant)
                 )
                 Spacer(modifier = Modifier.width(12.dp))
-                Text("Nguyen Van A", fontWeight = FontWeight.Bold, fontSize = 16.sp)
+                Text(
+                    "Nguyen Van A",
+                    fontWeight = FontWeight.Bold,
+                    fontSize = 16.sp,
+                    color = MaterialTheme.colorScheme.onBackground
+                )
             }
 
             // Progress
@@ -94,7 +99,7 @@ fun SelectServiceScreen(
                             .height(6.dp)
                             .weight(1f)
                             .background(
-                                if (index == 0) Color(0xFF00BCD4) else Color.LightGray,
+                                if (index == 0) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.surfaceVariant,
                                 shape = RoundedCornerShape(4.dp)
                             )
                     )
@@ -102,10 +107,14 @@ fun SelectServiceScreen(
                 }
             }
 
-            Text("Select Services:", fontWeight = FontWeight.Bold, fontSize = 16.sp)
+            Text(
+                "Select Services:",
+                fontWeight = FontWeight.Bold,
+                fontSize = 16.sp,
+                color = MaterialTheme.colorScheme.onBackground
+            )
             Spacer(modifier = Modifier.height(12.dp))
 
-            // List of services with bill
             val services = listOf(
                 Triple("Vaccine Services", "Comprehensive vaccination programs for both children and adults, including routine immunizations and specialized vaccines.", 100),
                 Triple("Outpatient Vaccination", "Routine vaccinations, booster shots, and consultations with specialists for vaccine-related queries and concerns.", 200),
@@ -125,7 +134,7 @@ fun SelectServiceScreen(
                         },
                     shape = RoundedCornerShape(12.dp),
                     elevation = CardDefaults.cardElevation(4.dp),
-                    colors = CardDefaults.cardColors(containerColor = Color(0xFFF8F8F8))
+                    colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface)
                 ) {
                     Row(
                         modifier = Modifier
@@ -134,14 +143,23 @@ fun SelectServiceScreen(
                         verticalAlignment = Alignment.CenterVertically
                     ) {
                         Column(modifier = Modifier.weight(1f)) {
-                            Text(title, fontWeight = FontWeight.Bold, fontSize = 15.sp)
+                            Text(
+                                title,
+                                fontWeight = FontWeight.Bold,
+                                fontSize = 15.sp,
+                                color = MaterialTheme.colorScheme.onSurface
+                            )
                             Spacer(modifier = Modifier.height(4.dp))
-                            Text(description, fontSize = 13.sp, color = Color.Gray)
+                            Text(
+                                description,
+                                fontSize = 13.sp,
+                                color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.75f)
+                            )
                         }
                         Icon(
                             imageVector = Icons.Default.ArrowForward,
                             contentDescription = "Go",
-                            tint = Color.Gray
+                            tint = MaterialTheme.colorScheme.onSurfaceVariant
                         )
                     }
                 }
@@ -151,7 +169,8 @@ fun SelectServiceScreen(
             Text(
                 text = "Consultations and Immunization Advice",
                 fontWeight = FontWeight.Bold,
-                fontSize = 16.sp
+                fontSize = 16.sp,
+                color = MaterialTheme.colorScheme.onBackground
             )
             Spacer(modifier = Modifier.height(80.dp))
         }

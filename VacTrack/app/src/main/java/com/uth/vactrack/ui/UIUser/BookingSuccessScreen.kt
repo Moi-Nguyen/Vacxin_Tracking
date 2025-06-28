@@ -3,8 +3,10 @@ package com.uth.vactrack.ui.UIUser
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
@@ -41,14 +43,10 @@ fun BookingSuccessScreen(
                         Image(
                             painter = painterResource(id = R.drawable.img_logo_xoanen),
                             contentDescription = "Logo",
-                            modifier = Modifier.size(56.dp),
+                            modifier = Modifier.size(52.dp),
                             contentScale = ContentScale.Fit
                         )
-                        Text(
-                            "Success",
-                            fontSize = 22.sp,
-                            fontWeight = FontWeight.Bold
-                        )
+                        Text("Success", fontSize = 22.sp, fontWeight = FontWeight.Bold)
                     }
                 },
                 navigationIcon = {
@@ -60,7 +58,7 @@ fun BookingSuccessScreen(
                     }
                 },
                 actions = {
-                    IconButton(onClick = {}) {
+                    IconButton(onClick = { }) {
                         Icon(
                             painter = painterResource(id = R.drawable.ic_info),
                             contentDescription = "Info"
@@ -75,8 +73,9 @@ fun BookingSuccessScreen(
     ) { innerPadding ->
         Column(
             modifier = Modifier
-                .fillMaxSize()
                 .padding(innerPadding)
+                .fillMaxSize()
+                .verticalScroll(rememberScrollState())
                 .padding(horizontal = 20.dp, vertical = 16.dp),
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
@@ -91,7 +90,7 @@ fun BookingSuccessScreen(
                             .weight(1f)
                             .height(6.dp)
                             .background(
-                                color = Color(0xFF00BCD4),
+                                color = MaterialTheme.colorScheme.primary,
                                 shape = RoundedCornerShape(4.dp)
                             )
                     )
@@ -104,7 +103,7 @@ fun BookingSuccessScreen(
             Card(
                 modifier = Modifier.fillMaxWidth(),
                 shape = RoundedCornerShape(20.dp),
-                colors = CardDefaults.cardColors(containerColor = Color(0xFFF2F2F2))
+                colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant)
             ) {
                 Column(
                     modifier = Modifier
@@ -123,36 +122,40 @@ fun BookingSuccessScreen(
                         Text(
                             "Nguyen Van A",
                             fontWeight = FontWeight.Bold,
-                            fontSize = 22.sp
+                            fontSize = 20.sp,
+                            color = MaterialTheme.colorScheme.onSurface
                         )
                     }
 
-                    Spacer(modifier = Modifier.height(20.dp))
+                    Spacer(modifier = Modifier.height(16.dp))
 
                     Text(
-                        "Services: $serviceName",
-                        fontSize = 18.sp,
-                        fontWeight = FontWeight.Medium
+                        "Service: $serviceName",
+                        fontSize = 16.sp,
+                        fontWeight = FontWeight.Medium,
+                        color = MaterialTheme.colorScheme.onSurface
                     )
                     Text(
                         "Facility: Gia Dinh Hospital",
-                        fontSize = 18.sp,
-                        fontWeight = FontWeight.Medium
+                        fontSize = 16.sp,
+                        fontWeight = FontWeight.Medium,
+                        color = MaterialTheme.colorScheme.onSurface
                     )
 
-                    Spacer(modifier = Modifier.height(14.dp))
+                    Spacer(modifier = Modifier.height(12.dp))
 
                     Row(verticalAlignment = Alignment.CenterVertically) {
                         Icon(
                             painter = painterResource(id = R.drawable.ic_calendar),
                             contentDescription = null,
-                            tint = Color.Gray,
+                            tint = MaterialTheme.colorScheme.onSurfaceVariant,
                             modifier = Modifier.size(20.dp)
                         )
                         Spacer(modifier = Modifier.width(6.dp))
                         Text(
                             "$selectedDate   $selectedTime",
-                            fontSize = 17.sp
+                            fontSize = 15.sp,
+                            color = MaterialTheme.colorScheme.onSurface
                         )
                     }
 
@@ -161,12 +164,12 @@ fun BookingSuccessScreen(
                         "Total bill: ${bill}.000đ",
                         fontWeight = FontWeight.Bold,
                         fontSize = 18.sp,
-                        color = Color(0xFF222222)
+                        color = MaterialTheme.colorScheme.onSurface
                     )
                 }
             }
 
-            Spacer(modifier = Modifier.weight(1f))
+            Spacer(modifier = Modifier.height(32.dp))
 
             Button(
                 onClick = onFinish,
@@ -174,10 +177,12 @@ fun BookingSuccessScreen(
                     .fillMaxWidth()
                     .height(52.dp),
                 shape = RoundedCornerShape(12.dp),
-                colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF00BCD4))
+                colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.primary)
             ) {
                 Text("Finish ➜", fontSize = 18.sp)
             }
+
+            Spacer(modifier = Modifier.height(16.dp))
         }
     }
 }
@@ -188,8 +193,8 @@ fun BookingSuccessScreenPreview() {
     VacTrackTheme {
         BookingSuccessScreen(
             serviceName = "Vaccine Services",
-            selectedDate = "13/05/2025",
-            selectedTime = "8:00 AM",
+            selectedDate = "14 May 2025",
+            selectedTime = "10:30 AM",
             bill = 100
         )
     }

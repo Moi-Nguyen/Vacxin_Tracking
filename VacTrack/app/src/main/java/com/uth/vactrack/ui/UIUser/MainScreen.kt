@@ -44,7 +44,7 @@ fun BottomNavigationBar(
             modifier = Modifier
                 .fillMaxWidth()
                 .align(Alignment.BottomCenter)
-                .background(Color.White)
+                .background(MaterialTheme.colorScheme.background)
                 .padding(horizontal = 5.dp, vertical = 2.dp),
             horizontalArrangement = Arrangement.SpaceAround,
             verticalAlignment = Alignment.CenterVertically
@@ -53,27 +53,25 @@ fun BottomNavigationBar(
                 Column(
                     horizontalAlignment = Alignment.CenterHorizontally,
                     modifier = Modifier.clickable {
-                        if (items[index] == "Record") {
-                            onRecordClick()
-                        }
+                        if (items[index] == "Record") onRecordClick()
                     }
                 ) {
                     Icon(
                         painter = painterResource(id = icon),
                         contentDescription = items[index],
-                        tint = if (index == selectedIndex) Color(0xFF007AFF) else Color.Gray,
+                        tint = if (index == selectedIndex) MaterialTheme.colorScheme.primary else Color.Gray,
                         modifier = Modifier
                             .size(28.dp)
                             .background(
-                                if (index == selectedIndex) Color(0x332E66FF) else Color.Transparent,
+                                if (index == selectedIndex) MaterialTheme.colorScheme.primary.copy(alpha = 0.1f) else Color.Transparent,
                                 shape = CircleShape
                             )
                             .padding(4.dp)
                     )
                     Text(
                         text = items[index],
-                        fontSize = 18.sp,
-                        color = if (index == selectedIndex) Color(0xFF007AFF) else Color.Gray
+                        fontSize = 14.sp,
+                        color = if (index == selectedIndex) MaterialTheme.colorScheme.primary else Color.Gray
                     )
                 }
             }
@@ -81,7 +79,7 @@ fun BottomNavigationBar(
 
         FloatingActionButton(
             onClick = onRecordClick,
-            containerColor = Color(0xFF007AFF),
+            containerColor = MaterialTheme.colorScheme.primary,
             contentColor = Color.White,
             shape = CircleShape,
             modifier = Modifier
@@ -90,11 +88,7 @@ fun BottomNavigationBar(
                 .size(56.dp),
             elevation = FloatingActionButtonDefaults.elevation(8.dp)
         ) {
-            Icon(
-                imageVector = Icons.Default.Add,
-                contentDescription = "Add",
-                modifier = Modifier.size(24.dp)
-            )
+            Icon(Icons.Default.Add, contentDescription = "Add")
         }
     }
 }
@@ -117,7 +111,7 @@ fun MainScreen(navController: NavController) {
                 .padding(innerPadding)
                 .padding(horizontal = 16.dp, vertical = 2.dp)
                 .verticalScroll(rememberScrollState())
-                .background(Color.White)
+                .background(MaterialTheme.colorScheme.background)
         ) {
             Row(
                 modifier = Modifier
@@ -127,7 +121,7 @@ fun MainScreen(navController: NavController) {
                 verticalAlignment = Alignment.CenterVertically
             ) {
                 Image(
-                    painter = painterResource(id = R.drawable.ic_vactrack_logo),
+                    painter = painterResource(id = R.drawable.img_logo_xoanen),
                     contentDescription = "Logo",
                     modifier = Modifier.height(80.dp)
                 )
@@ -137,9 +131,7 @@ fun MainScreen(navController: NavController) {
                     modifier = Modifier
                         .size(48.dp)
                         .clip(CircleShape)
-                        .clickable {
-                            navController.navigate("profile")
-                        }
+                        .clickable { navController.navigate("profile") }
                 )
             }
 
@@ -150,9 +142,9 @@ fun MainScreen(navController: NavController) {
             )
 
             val featureColors = listOf(
-                Color(0xFFD9EDFC),
-                Color(0xFFE6F7F9),
-                Color(0xFFE6F3F6)
+                MaterialTheme.colorScheme.surfaceVariant,
+                MaterialTheme.colorScheme.surfaceVariant,
+                MaterialTheme.colorScheme.surfaceVariant
             )
 
             features.forEachIndexed { index, (icon, title, subtitle) ->
@@ -181,7 +173,7 @@ fun MainScreen(navController: NavController) {
                             }
                         },
                     shape = RoundedCornerShape(16.dp),
-                    colors = CardDefaults.cardColors(containerColor = featureColors[index % featureColors.size])
+                    colors = CardDefaults.cardColors(containerColor = featureColors[index])
                 ) {
                     Row(
                         modifier = Modifier.padding(16.dp),
@@ -192,26 +184,26 @@ fun MainScreen(navController: NavController) {
                             Box(
                                 modifier = Modifier
                                     .size(40.dp)
-                                    .background(Color.White, shape = CircleShape),
+                                    .background(MaterialTheme.colorScheme.background, shape = CircleShape),
                                 contentAlignment = Alignment.Center
                             ) {
                                 Icon(
                                     painter = painterResource(id = icon),
                                     contentDescription = title,
-                                    tint = Color(0xFF007AFF),
+                                    tint = MaterialTheme.colorScheme.primary,
                                     modifier = Modifier.size(22.dp)
                                 )
                             }
                             Spacer(modifier = Modifier.width(12.dp))
                             Column {
-                                Text(title, fontWeight = FontWeight.Bold, fontSize = 16.sp)
-                                Text(subtitle, fontSize = 14.sp, color = Color.Gray)
+                                Text(title, fontWeight = FontWeight.Bold, fontSize = 16.sp, color = MaterialTheme.colorScheme.onSurface)
+                                Text(subtitle, fontSize = 14.sp, color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.7f))
                             }
                         }
                         Icon(
                             painter = painterResource(id = R.drawable.ic_arrow_move),
                             contentDescription = "Go",
-                            tint = Color.Gray,
+                            tint = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f),
                             modifier = Modifier.size(20.dp)
                         )
                     }
@@ -219,8 +211,7 @@ fun MainScreen(navController: NavController) {
             }
 
             Spacer(modifier = Modifier.height(24.dp))
-
-            Text("Your Appointment", fontWeight = FontWeight.Bold, fontSize = 18.sp)
+            Text("Your Appointment", fontWeight = FontWeight.Bold, fontSize = 18.sp, color = MaterialTheme.colorScheme.onBackground)
             Spacer(modifier = Modifier.height(8.dp))
 
             val appointments = listOf(
@@ -234,14 +225,14 @@ fun MainScreen(navController: NavController) {
                         modifier = Modifier.width(280.dp),
                         shape = RoundedCornerShape(16.dp),
                         elevation = CardDefaults.cardElevation(4.dp),
-                        colors = CardDefaults.cardColors(containerColor = Color.White)
+                        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface)
                     ) {
                         Column(modifier = Modifier.padding(16.dp)) {
                             Row(verticalAlignment = Alignment.CenterVertically) {
                                 Box(
                                     modifier = Modifier
                                         .size(36.dp)
-                                        .background(Color(0xFF91C6FF), CircleShape),
+                                        .background(MaterialTheme.colorScheme.primary, CircleShape),
                                     contentAlignment = Alignment.Center
                                 ) {
                                     Text(
@@ -252,13 +243,13 @@ fun MainScreen(navController: NavController) {
                                 }
                                 Spacer(modifier = Modifier.width(12.dp))
                                 Column(modifier = Modifier.weight(1f)) {
-                                    Text(facility, fontWeight = FontWeight.Bold, fontSize = 16.sp)
-                                    Text(service, fontSize = 14.sp, color = Color.Gray)
+                                    Text(facility, fontWeight = FontWeight.Bold, fontSize = 16.sp, color = MaterialTheme.colorScheme.onSurface)
+                                    Text(service, fontSize = 14.sp, color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.7f))
                                 }
                                 Icon(
                                     painter = painterResource(id = R.drawable.ic_location),
                                     contentDescription = "Map",
-                                    tint = Color.Gray,
+                                    tint = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f),
                                     modifier = Modifier.size(20.dp)
                                 )
                             }
@@ -267,20 +258,20 @@ fun MainScreen(navController: NavController) {
                                 Icon(
                                     painter = painterResource(id = R.drawable.ic_calendar),
                                     contentDescription = null,
-                                    tint = Color.Gray,
+                                    tint = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f),
                                     modifier = Modifier.size(16.dp)
                                 )
                                 Spacer(modifier = Modifier.width(4.dp))
-                                Text(datetime.first, fontSize = 14.sp)
+                                Text(datetime.first, fontSize = 14.sp, color = MaterialTheme.colorScheme.onSurface)
                                 Spacer(modifier = Modifier.width(12.dp))
                                 Icon(
                                     painter = painterResource(id = R.drawable.ic_clock),
                                     contentDescription = null,
-                                    tint = Color.Gray,
+                                    tint = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f),
                                     modifier = Modifier.size(16.dp)
                                 )
                                 Spacer(modifier = Modifier.width(4.dp))
-                                Text(datetime.second, fontSize = 14.sp)
+                                Text(datetime.second, fontSize = 14.sp, color = MaterialTheme.colorScheme.onSurface)
                             }
                         }
                     }
@@ -288,8 +279,7 @@ fun MainScreen(navController: NavController) {
             }
 
             Spacer(modifier = Modifier.height(24.dp))
-
-            Text("Services", fontWeight = FontWeight.Bold, fontSize = 20.sp)
+            Text("Services", fontWeight = FontWeight.Bold, fontSize = 20.sp, color = MaterialTheme.colorScheme.onBackground)
             Spacer(modifier = Modifier.height(12.dp))
 
             val services = listOf(
@@ -307,18 +297,17 @@ fun MainScreen(navController: NavController) {
                     Column(
                         horizontalAlignment = Alignment.CenterHorizontally,
                         modifier = Modifier.clickable {
-                            when (label) {
-                                "Vaccination" -> navController.navigate("appointment")
-                                "Screening" -> {
-                                    val browserIntent = Intent(Intent.ACTION_VIEW, Uri.parse("https://vnvc.vn/"))
-                                    context.startActivity(browserIntent)
-                                }
+                            if (label == "Vaccination") {
+                                navController.navigate("appointment")
+                            } else if (label == "Screening") {
+                                val browserIntent = Intent(Intent.ACTION_VIEW, Uri.parse("https://vnvc.vn/"))
+                                context.startActivity(browserIntent)
                             }
                         }
                     ) {
                         Card(
                             shape = CircleShape,
-                            colors = CardDefaults.cardColors(containerColor = Color(0xFFF0F0F0)),
+                            colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant),
                             modifier = Modifier.size(64.dp),
                             elevation = CardDefaults.cardElevation(2.dp)
                         ) {
@@ -332,7 +321,7 @@ fun MainScreen(navController: NavController) {
                             }
                         }
                         Spacer(modifier = Modifier.height(4.dp))
-                        Text(label, fontSize = 14.sp)
+                        Text(label, fontSize = 14.sp, color = MaterialTheme.colorScheme.onSurface)
                     }
                 }
             }
