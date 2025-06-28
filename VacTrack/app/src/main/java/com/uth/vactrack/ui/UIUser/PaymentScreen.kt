@@ -1,5 +1,6 @@
 package com.uth.vactrack.ui.UIUser
 
+import android.net.Uri
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
@@ -12,13 +13,16 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import coil.compose.AsyncImage
 import com.uth.vactrack.R
 import com.uth.vactrack.ui.theme.VacTrackTheme
+import java.net.URLEncoder
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -26,11 +30,24 @@ fun PaymentScreen(
     serviceName: String,
     selectedDate: String,
     selectedTime: String,
-    bill: Int,
+    bill: Int, // bill in thousands (e.g., 100 = 100.000đ)
     onBack: () -> Unit = {},
     onCancel: () -> Unit = {},
     onPay: () -> Unit = {}
 ) {
+    val bankId = "ACB"
+    val accountNumber = "39598507"
+    val template = "compact2"
+    val accountName = "Nguyen Duc Luong"
+    val amount = bill * 1000 // Convert to VNĐ
+    val addInfo = "thanh toan Vactrack voi so tien ${amount}đ"
+
+    val encodedInfo = URLEncoder.encode(addInfo, "UTF-8")
+    val encodedName = URLEncoder.encode(accountName, "UTF-8")
+
+    val qrUrl = "https://img.vietqr.io/image/$bankId-$accountNumber-$template.png" +
+            "?amount=$amount&addInfo=$encodedInfo&accountName=$encodedName"
+
     Scaffold(
         topBar = {
             TopAppBar(
@@ -76,7 +93,7 @@ fun PaymentScreen(
                 .padding(horizontal = 20.dp, vertical = 16.dp),
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
-            // Progress
+            // Step Progress
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.spacedBy(4.dp)
@@ -96,19 +113,13 @@ fun PaymentScreen(
 
             Spacer(modifier = Modifier.height(24.dp))
 
-            // Info Card
+            // Appointment Info Card
             Card(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .heightIn(min = 220.dp),
+                modifier = Modifier.fillMaxWidth(),
                 shape = RoundedCornerShape(20.dp),
                 colors = CardDefaults.cardColors(containerColor = Color(0xFFF2F2F2))
             ) {
-                Column(
-                    modifier = Modifier
-                        .padding(24.dp)
-                        .fillMaxWidth()
-                ) {
+                Column(modifier = Modifier.padding(24.dp)) {
                     Row(verticalAlignment = Alignment.CenterVertically) {
                         Image(
                             painter = painterResource(id = R.drawable.ic_avatar),
@@ -149,18 +160,18 @@ fun PaymentScreen(
             Spacer(modifier = Modifier.height(28.dp))
 
             // QR Code
-            Image(
-                painter = painterResource(id = R.drawable.qr_mockup),
-                contentDescription = "QR Code",
+            AsyncImage(
+                model = qrUrl,
+                contentDescription = "QR VietQR",
+                contentScale = ContentScale.Fit,
                 modifier = Modifier
-                    .size(320.dp)
-                    .padding(8.dp),
-                contentScale = ContentScale.Fit
+                    .size(500.dp) // enlarged size
+                    .padding(8.dp)
             )
 
             Spacer(modifier = Modifier.height(24.dp))
 
-            // Buttons
+            // Action Buttons
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.spacedBy(16.dp)
@@ -193,10 +204,10 @@ fun PaymentScreen(
 fun PaymentScreenPreview() {
     VacTrackTheme {
         PaymentScreen(
-            serviceName = "Vaccine Services",
-            selectedDate = "13/05/2025",
-            selectedTime = "8:00 AM",
-            bill = 100
+            serviceName = "Outpatient Vaccination",
+            selectedDate = "Tuesday, 13 May 2025",
+            selectedTime = "9:00 AM",
+            bill = 200
         )
     }
 }

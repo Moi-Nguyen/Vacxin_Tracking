@@ -307,8 +307,12 @@ fun MainScreen(navController: NavController) {
                     Column(
                         horizontalAlignment = Alignment.CenterHorizontally,
                         modifier = Modifier.clickable {
-                            if (label == "Vaccination") {
-                                navController.navigate("appointment")
+                            when (label) {
+                                "Vaccination" -> navController.navigate("appointment")
+                                "Screening" -> {
+                                    val browserIntent = Intent(Intent.ACTION_VIEW, Uri.parse("https://vnvc.vn/"))
+                                    context.startActivity(browserIntent)
+                                }
                             }
                         }
                     ) {
