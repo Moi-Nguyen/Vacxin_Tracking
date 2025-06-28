@@ -25,8 +25,7 @@ import com.uth.vactrack.R
 
 @Composable
 fun HomeScreen(
-    navController: NavController = rememberNavController(),
-    onLearnMoreClick: () -> Unit = {}
+    navController: NavController = rememberNavController()
 ) {
     var menuExpanded by remember { mutableStateOf(false) }
 
@@ -132,7 +131,7 @@ fun HomeScreen(
             }
         }
 
-        // ===== Doctor banner (Our Services) =====
+        // ===== Doctor banner =====
         Image(
             painter = painterResource(id = R.drawable.ic_img_doctor),
             contentDescription = "Doctor Banner",
@@ -152,30 +151,23 @@ fun HomeScreen(
                 .padding(top = 16.dp, start = 16.dp, end = 16.dp)
         )
 
-        // ===== Learn More =====
+        // ===== Home Button (replaces "Learn More") =====
         Row(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(top = 12.dp)
-                .clickable { onLearnMoreClick() },
-            horizontalArrangement = Arrangement.Center,
-            verticalAlignment = Alignment.CenterVertically
+                .padding(top = 20.dp),
+            horizontalArrangement = Arrangement.Center
         ) {
-            Text(
-                text = "Learn More",
-                color = Color(0xFF1A237E),
-                fontSize = 16.sp,
-                fontWeight = FontWeight.Medium,
-                modifier = Modifier.padding(4.dp)
-            )
-            Icon(
-                painter = painterResource(id = R.drawable.ic_arrow_move),
-                contentDescription = "Arrow",
-                tint = Color(0xFF1A237E),
+            Button(
+                onClick = { navController.navigate("main") },
+                shape = RoundedCornerShape(12.dp),
+                colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF2D25C9)),
                 modifier = Modifier
-                    .size(25.dp)
-                    .padding(start = 4.dp)
-            )
+                    .padding(horizontal = 16.dp)
+                    .height(48.dp)
+            ) {
+                Text(text = "Home", fontSize = 16.sp, color = Color.White)
+            }
         }
 
         // ===== Info Section =====

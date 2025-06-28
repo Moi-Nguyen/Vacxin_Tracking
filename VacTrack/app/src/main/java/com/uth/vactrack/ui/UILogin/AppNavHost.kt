@@ -112,12 +112,7 @@ fun AppNavHost(startDestination: String = "login") {
         }
 
         composable("home") {
-            HomeScreen(
-                navController = navController,
-                onLearnMoreClick = {
-                    navController.navigate("main")
-                }
-            )
+            HomeScreen(navController = navController)
         }
 
         composable("main") {
@@ -234,7 +229,6 @@ fun AppNavHost(startDestination: String = "login") {
             )
         }
 
-        // ✅ Profile (sửa: truyền navController)
         composable("profile") {
             ProfileScreen(
                 navController = navController,
@@ -242,7 +236,6 @@ fun AppNavHost(startDestination: String = "login") {
             )
         }
 
-        // ✅ Edit Profile
         composable("edit_profile") {
             EditProfileScreen(
                 onBack = { navController.popBackStack() },
