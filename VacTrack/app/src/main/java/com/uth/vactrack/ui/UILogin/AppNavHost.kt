@@ -16,7 +16,6 @@ fun AppNavHost(startDestination: String = "login") {
 
     NavHost(navController = navController, startDestination = startDestination) {
 
-        // Login
         composable("login") {
             LoginScreen(
                 onLoginSuccess = {
@@ -31,7 +30,6 @@ fun AppNavHost(startDestination: String = "login") {
             )
         }
 
-        // Register
         composable("register") {
             RegisterScreen(
                 onRegisterSuccess = {
@@ -43,7 +41,6 @@ fun AppNavHost(startDestination: String = "login") {
             )
         }
 
-        // Forgot Password
         composable(
             "forgot_password?email={email}",
             arguments = listOf(navArgument("email") {
@@ -61,7 +58,6 @@ fun AppNavHost(startDestination: String = "login") {
             )
         }
 
-        // OTP
         composable(
             "otp?email={email}",
             arguments = listOf(navArgument("email") {
@@ -80,7 +76,6 @@ fun AppNavHost(startDestination: String = "login") {
             )
         }
 
-        // Confirm Reset
         composable(
             "confirm_reset?resetToken={resetToken}",
             arguments = listOf(navArgument("resetToken") {
@@ -97,7 +92,6 @@ fun AppNavHost(startDestination: String = "login") {
             )
         }
 
-        // Set New Password
         composable(
             "set_new_password?resetToken={resetToken}",
             arguments = listOf(navArgument("resetToken") {
@@ -117,7 +111,6 @@ fun AppNavHost(startDestination: String = "login") {
             )
         }
 
-        // Home
         composable("home") {
             HomeScreen(
                 navController = navController,
@@ -127,12 +120,10 @@ fun AppNavHost(startDestination: String = "login") {
             )
         }
 
-        // Main
         composable("main") {
             MainScreen(navController = navController)
         }
 
-        // Appointment
         composable("appointment") {
             AppointmentScreen(
                 navController = navController,
@@ -140,7 +131,6 @@ fun AppNavHost(startDestination: String = "login") {
             )
         }
 
-        // Select Service
         composable("select_service") {
             SelectServiceScreen(
                 navController = navController,
@@ -148,7 +138,6 @@ fun AppNavHost(startDestination: String = "login") {
             )
         }
 
-        // Select Time and Slot
         composable(
             "select_time_and_slot/{serviceName}/{bill}",
             arguments = listOf(
@@ -166,7 +155,6 @@ fun AppNavHost(startDestination: String = "login") {
             )
         }
 
-        // Payment screen
         composable(
             "payment/{service}/{date}/{time}/{bill}",
             arguments = listOf(
@@ -210,7 +198,6 @@ fun AppNavHost(startDestination: String = "login") {
             )
         }
 
-        // Booking Success ✅
         composable(
             "booking_success/{service}/{date}/{time}/{bill}",
             arguments = listOf(
@@ -247,9 +234,20 @@ fun AppNavHost(startDestination: String = "login") {
             )
         }
 
-        // ✅ Profile
+        // ✅ Profile (sửa: truyền navController)
         composable("profile") {
-            ProfileScreen(onBack = { navController.popBackStack() })
+            ProfileScreen(
+                navController = navController,
+                onBack = { navController.popBackStack() }
+            )
+        }
+
+        // ✅ Edit Profile
+        composable("edit_profile") {
+            EditProfileScreen(
+                onBack = { navController.popBackStack() },
+                onSubmit = { navController.popBackStack() }
+            )
         }
     }
 }

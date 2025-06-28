@@ -20,11 +20,16 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.navigation.NavController
+import androidx.navigation.compose.rememberNavController
 import com.uth.vactrack.R
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun ProfileScreen(onBack: () -> Unit = {}) {
+fun ProfileScreen(
+    navController: NavController = rememberNavController(),
+    onBack: () -> Unit = { navController.popBackStack() }
+) {
     Scaffold(
         topBar = {
             TopAppBar(
@@ -35,7 +40,7 @@ fun ProfileScreen(onBack: () -> Unit = {}) {
                     }
                 },
                 actions = {
-                    IconButton(onClick = { /* TODO */ }) {
+                    IconButton(onClick = { /* Optional menu */ }) {
                         Icon(Icons.Filled.MoreVert, contentDescription = "Menu")
                     }
                 }
@@ -70,7 +75,9 @@ fun ProfileScreen(onBack: () -> Unit = {}) {
 
             ProfileOptionGroup(
                 options = listOf(
-                    Triple("Edit profile information", R.drawable.ic_edit) {},
+                    Triple("Edit profile information", R.drawable.ic_edit) {
+                        navController.navigate("edit_profile")
+                    },
                     Triple("Notifications", R.drawable.ic_notification) {},
                     Triple("Language", R.drawable.ic_language) {}
                 ),
@@ -142,7 +149,7 @@ fun ProfileOptionGroup(
     }
 }
 
-@Preview(showBackground = true, showSystemUi = true, name = "Profile Screen Preview")
+@Preview(showBackground = true, showSystemUi = true)
 @Composable
 fun ProfileScreenPreview() {
     ProfileScreen()

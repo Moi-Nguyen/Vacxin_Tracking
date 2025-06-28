@@ -137,5 +137,13 @@ fun UserNavHost(navController: NavHostController = rememberNavController()) {
         composable("profile") {
             ProfileScreen(onBack = { navController.popBackStack() })
         }
+
+        // ✅ Edit Profile screen
+        composable("edit_profile") {
+            EditProfileScreen(
+                onBack = { navController.popBackStack() },
+                onSubmit = { navController.popBackStack() }
+            )
+        }
     }
 }
