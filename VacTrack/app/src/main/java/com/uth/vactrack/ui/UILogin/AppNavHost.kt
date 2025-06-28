@@ -248,5 +248,9 @@ fun AppNavHost(
                 onSubmit = { navController.popBackStack() }
             )
         }
+
+        composable("tracking_booking") {
+            TrackingBookingScreen(navController = navController)
+        }
     }
 }

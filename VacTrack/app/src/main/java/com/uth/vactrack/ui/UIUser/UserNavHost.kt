@@ -33,7 +33,11 @@ fun UserNavHost(navController: NavHostController = rememberNavController()) {
             )
         }
 
-        // Select Time and Slot
+        // ✅ Tracking Booking (đã sửa: không truyền onBack vì không cần)
+        composable("tracking_booking") {
+            TrackingBookingScreen(navController = navController)
+        }
+
         composable(
             "select_time_and_slot/{serviceName}/{bill}",
             arguments = listOf(
@@ -52,7 +56,6 @@ fun UserNavHost(navController: NavHostController = rememberNavController()) {
             )
         }
 
-        // Payment
         composable(
             "payment/{service}/{date}/{time}/{bill}",
             arguments = listOf(
@@ -96,7 +99,6 @@ fun UserNavHost(navController: NavHostController = rememberNavController()) {
             )
         }
 
-        // Booking Success ✅
         composable(
             "booking_success/{service}/{date}/{time}/{bill}",
             arguments = listOf(
@@ -133,12 +135,10 @@ fun UserNavHost(navController: NavHostController = rememberNavController()) {
             )
         }
 
-        // ✅ Profile screen
         composable("profile") {
             ProfileScreen(onBack = { navController.popBackStack() })
         }
 
-        // ✅ Edit Profile screen
         composable("edit_profile") {
             EditProfileScreen(
                 onBack = { navController.popBackStack() },

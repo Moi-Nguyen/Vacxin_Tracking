@@ -297,6 +297,7 @@ fun MainScreen(navController: NavController) {
                                     val browserIntent = Intent(Intent.ACTION_VIEW, Uri.parse("https://vnvc.vn/"))
                                     context.startActivity(browserIntent)
                                 }
+                                "Tracking" -> navController.navigate("tracking_booking")
                                 "Consultation" -> {
                                     val fbIntent = Intent(Intent.ACTION_VIEW, Uri.parse("https://www.facebook.com/trungtamtiemchungvnvc"))
                                     context.startActivity(fbIntent)
@@ -331,6 +332,5 @@ fun MainScreen(navController: NavController) {
 @Preview(showBackground = true, showSystemUi = true)
 @Composable
 fun MainScreenPreview() {
-    val navController = rememberNavController()
-    MainScreen(navController = navController)
+    MainScreen(navController = rememberNavController())
 }
