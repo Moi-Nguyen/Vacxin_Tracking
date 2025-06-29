@@ -1,5 +1,7 @@
 package com.uth.vactrack.ui.UIUser
 
+import android.content.Intent
+import android.provider.Settings
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
@@ -14,11 +16,13 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.core.app.NotificationManagerCompat
 import androidx.navigation.NavController
 import androidx.navigation.compose.rememberNavController
 import com.uth.vactrack.R
@@ -31,6 +35,11 @@ fun ProfileScreen(
     isDarkTheme: Boolean = false,
     onToggleTheme: () -> Unit = {}
 ) {
+    val context = LocalContext.current
+    val isNotificationEnabled = remember {
+        mutableStateOf(NotificationManagerCompat.from(context).areNotificationsEnabled())
+    }
+
     Scaffold(
         topBar = {
             TopAppBar(
@@ -79,12 +88,25 @@ fun ProfileScreen(
                     Triple("Edit profile information", R.drawable.ic_edit) {
                         navController.navigate("edit_profile")
                     },
-                    Triple("Notifications", R.drawable.ic_notification) {},
+                    Triple("Notifications", R.drawable.ic_notification) {
+                        // Mở cài đặt thông báo hệ thống
+                        val intent = Intent().apply {
+                            action = Settings.ACTION_APP_NOTIFICATION_SETTINGS
+                            putExtra(Settings.EXTRA_APP_PACKAGE, context.packageName)
+                        }
+                        context.startActivity(intent)
+                    },
                     Triple("Language", R.drawable.ic_language) {}
                 ),
                 rightContent = listOf(
                     null,
-                    { Text("ON", fontSize = 14.sp, color = Color.Blue) },
+                    {
+                        Text(
+                            if (isNotificationEnabled.value) "ON" else "OFF",
+                            fontSize = 14.sp,
+                            color = if (isNotificationEnabled.value) Color.Blue else Color.Gray
+                        )
+                    },
                     { Text("English", fontSize = 14.sp) }
                 )
             )
