@@ -1,0 +1,37 @@
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="100dp"
+    android:height="100dp"
+    android:viewportWidth="100"
+    android:viewportHeight="100">
+
+    <!-- Nền tròn xanh lá -->
+    <path
+        android:fillColor="#03BB58"
+        android:pathData="M50,0A50,50 0 1,0 50.01,0Z" />
+
+    <!-- Khung chat to, cân giữa -->
+    <path
+        android:pathData="M25,40
+                          Q25,30 50,30
+                          Q75,30 75,45
+                          Q75,60 55,65
+                          L50,72
+                          L45,65
+                          Q25,60 25,45Z"
+        android:strokeColor="#FFFFFF"
+        android:strokeWidth="5"
+
+        android:strokeLineCap="round"
+        android:strokeLineJoin="round" />
+
+    <!-- Ba chấm tin nhắn -->
+    <path
+        android:pathData="M40,45A3,3 0 1,0 40.1,45"
+        android:fillColor="#FFFFFF"/>
+    <path
+        android:pathData="M50,45A3,3 0 1,0 50.1,45"
+        android:fillColor="#FFFFFF"/>
+    <path
+        android:pathData="M60,45A3,3 0 1,0 60.1,45"
+        android:fillColor="#FFFFFF"/>
+</vector>
