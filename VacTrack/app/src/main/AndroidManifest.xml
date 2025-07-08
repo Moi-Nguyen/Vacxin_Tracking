@@ -20,7 +20,7 @@
             android:name=".ui.UILogin.LoginActivity"
             android:exported="true" />
 
-        <!-- Màn dùng cho nhóm (nội bộ) -->
+        <!-- Màn chính của nhóm -->
         <activity
             android:name=".MainActivity"
             android:exported="true">
@@ -29,6 +29,11 @@
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
+
+        <!-- Màn giao diện bác sĩ -->
+        <activity
+            android:name=".ui.doctor.DoctorActivity"
+            android:exported="false" />
 
     </application>
 
