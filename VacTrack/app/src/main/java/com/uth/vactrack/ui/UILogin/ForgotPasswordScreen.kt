@@ -101,7 +101,7 @@ fun ForgotPasswordScreen(
             }
             Spacer(modifier = Modifier.height(8.dp))
             Image(
-                painter = painterResource(id = R.drawable.ic_vactrack_logo),
+                painter = painterResource(id = R.drawable.img_logo_xoanen),
                 contentDescription = "Logo VacTrack",
                 modifier = Modifier.size(240.dp)
             )

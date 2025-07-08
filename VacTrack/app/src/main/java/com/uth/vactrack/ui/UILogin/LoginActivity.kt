@@ -19,7 +19,7 @@ class LoginActivity : ComponentActivity() {
                         SessionManager(this).startSession()
                         // Navigate to MainActivity
                         val intent = Intent(this, MainActivity::class.java)
-                        intent.putExtra("navigateTo", "home") // ✅ Thêm dòng này
+                        intent.putExtra("navigateTo", "home") 
                         startActivity(intent)
 
                         // Finish login activity to prevent going back

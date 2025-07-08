@@ -211,11 +211,6 @@ fun OtherInfoCard(
 }
 
 @Composable
-fun SectionTitle(title: String) {
-    Text(title, fontWeight = FontWeight.Bold, fontSize = 16.sp, color = MaterialTheme.colorScheme.onBackground)
-}
-
-@Composable
 fun AppointmentCard() {
     Card(
         shape = RoundedCornerShape(12.dp),

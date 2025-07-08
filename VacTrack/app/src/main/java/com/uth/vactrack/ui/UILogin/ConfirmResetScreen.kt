@@ -46,7 +46,7 @@ fun ConfirmResetScreen(
             }
             Spacer(modifier = Modifier.height(8.dp))
             Image(
-                painter = painterResource(id = com.uth.vactrack.R.drawable.ic_vactrack_logo),
+                painter = painterResource(id = com.uth.vactrack.R.drawable.img_logo_xoanen),
                 contentDescription = "Logo VacTrack",
                 modifier = Modifier.size(240.dp)
             )

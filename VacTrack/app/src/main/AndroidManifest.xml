@@ -17,7 +17,7 @@
 
         <!-- Khởi động tại màn hình Login -->
         <activity
-            android:name=".ui.UILogin.LoginActivity"
+            android:name=".MainActivityMVVM"
             android:exported="true">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
@@ -27,10 +27,14 @@
 
         <!-- Không export vì chỉ điều hướng nội bộ -->
         <activity
+            android:name=".ui.UILogin.LoginActivity"
+            android:exported="true" />
+
+        <!-- Mới thêm: UserActivity cho user đã login -->
+        <activity
             android:name=".MainActivity"
             android:exported="false" />
 
-        <!-- Mới thêm: UserActivity cho user đã login -->
         <activity
             android:name=".ui.UIUser.UserActivity"
             android:exported="false" />

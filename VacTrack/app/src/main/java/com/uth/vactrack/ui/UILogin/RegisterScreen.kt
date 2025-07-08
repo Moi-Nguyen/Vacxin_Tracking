@@ -124,7 +124,7 @@ fun RegisterScreen(
         ) {
             Spacer(modifier = Modifier.height(32.dp))
             Image(
-                painter = painterResource(id = R.drawable.ic_vactrack_logo),
+                painter = painterResource(id = R.drawable.img_logo_xoanen),
                 contentDescription = "Logo VacTrack",
                 modifier = Modifier.size(220.dp)
             )
