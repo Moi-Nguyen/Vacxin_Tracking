@@ -31,6 +31,9 @@ class OtpViewModel : ViewModel() {
 
     fun verifyOtp(email: String) {
         val otp = _state.value.otp
+        println("DEBUG OTP: '$otp', EMAIL: '$email'")
+        // Nếu người dùng nhập từng ký tự, cần join lại (nếu truyền vào là List)
+        // Ở đây giả sử otp là String đã join, nếu không thì cần sửa ở UI truyền vào setOtp(otpInputs.joinToString(""))
         if (otp.length != 6) {
             _state.value = _state.value.copy(error = "OTP phải đủ 6 ký tự")
             return
@@ -39,6 +42,7 @@ class OtpViewModel : ViewModel() {
         viewModelScope.launch {
             try {
                 val url = URL("${AppConfig.BASE_URL}/api/auth/verify-otp")
+                println("DEBUG URL: $url")
                 val conn = url.openConnection() as HttpURLConnection
                 conn.requestMethod = "POST"
                 conn.setRequestProperty("Content-Type", "application/json")
@@ -49,11 +53,22 @@ class OtpViewModel : ViewModel() {
                 }.toString()
                 conn.outputStream.use { it.write(body.toByteArray()) }
                 val response = conn.inputStream.bufferedReader().readText()
+                println("DEBUG RESPONSE: $response")
+                println("DEBUG STATUS: ${conn.responseCode}")
                 val json = JSONObject(response)
                 if (conn.responseCode == 200) {
-                    _state.value = _state.value.copy(isLoading = false, resetToken = json.getString("resetToken"), success = true)
+                    _state.value = _state.value.copy(
+                        isLoading = false,
+                        resetToken = json.getString("resetToken"),
+                        success = true
+                    )
                 } else {
-                    _state.value = _state.value.copy(isLoading = false, error = json.optString("error", "OTP không hợp lệ"), success = false)
+                    val errMsg = json.optString("error", "OTP không hợp lệ")
+                    _state.value = _state.value.copy(
+                        isLoading = false,
+                        error = errMsg,
+                        success = false
+                    )
                 }
             } catch (e: Exception) {
                 _state.value = _state.value.copy(isLoading = false, error = e.localizedMessage ?: "Lỗi xác thực OTP", success = false)

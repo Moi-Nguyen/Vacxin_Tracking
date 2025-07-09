@@ -11,6 +11,7 @@ import kotlinx.coroutines.launch
 data class SetNewPasswordState(
     val isLoading: Boolean = false,
     val newPassword: String = "",
+    val confirmPassword: String = "",
     val error: String? = null,
     val message: String? = null,
     val success: Boolean = false
@@ -24,11 +25,19 @@ class SetNewPasswordViewModel : ViewModel() {
     fun setNewPassword(password: String) {
         _state.value = _state.value.copy(newPassword = password)
     }
+    fun setConfirmPassword(password: String) {
+        _state.value = _state.value.copy(confirmPassword = password)
+    }
 
     fun resetPassword(token: String) {
         val password = _state.value.newPassword
+        val confirm = _state.value.confirmPassword
         if (password.length < 6) {
             _state.value = _state.value.copy(error = "Mật khẩu phải từ 6 ký tự")
+            return
+        }
+        if (password != confirm) {
+            _state.value = _state.value.copy(error = "Mật khẩu xác nhận không khớp")
             return
         }
         _state.value = _state.value.copy(isLoading = true, error = null, message = null, success = false)

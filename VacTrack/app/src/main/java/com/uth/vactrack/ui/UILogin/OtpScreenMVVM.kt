@@ -23,6 +23,18 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.uth.vactrack.R
 import com.uth.vactrack.ui.viewmodel.OtpViewModel
+import androidx.compose.ui.focus.FocusRequester
+import androidx.compose.ui.focus.focusRequester
+import androidx.compose.ui.platform.LocalFocusManager
+import android.os.Vibrator
+import android.os.VibrationEffect
+import androidx.compose.foundation.border
+import androidx.compose.foundation.text.BasicTextField
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.draw.shadow
+import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.foundation.interaction.MutableInteractionSource
+import androidx.compose.foundation.interaction.collectIsFocusedAsState
 
 @Composable
 fun OtpScreenMVVM(
@@ -37,10 +49,27 @@ fun OtpScreenMVVM(
     val blue = Color(0xFF1976D2)
     val otpLength = 6
     var otpInputs by remember { mutableStateOf(List(otpLength) { "" }) }
+    val focusRequesters = remember { List(otpLength) { FocusRequester() } }
+    val focusManager = LocalFocusManager.current
+
+    // Focus ô đầu tiên khi vào màn hình
+    LaunchedEffect(Unit) {
+        focusRequesters[0].requestFocus()
+    }
 
     LaunchedEffect(state.error) {
         state.error?.let {
             Toast.makeText(context, it, Toast.LENGTH_SHORT).show()
+            // Rung khi sai mã
+            val vibrator = context.getSystemService(android.content.Context.VIBRATOR_SERVICE) as? Vibrator
+            vibrator?.let {
+                if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.O) {
+                    it.vibrate(VibrationEffect.createOneShot(200, VibrationEffect.DEFAULT_AMPLITUDE))
+                } else {
+                    @Suppress("DEPRECATION")
+                    it.vibrate(200)
+                }
+            }
             viewModel.clearError()
         }
     }
@@ -101,31 +130,42 @@ fun OtpScreenMVVM(
                 modifier = Modifier.fillMaxWidth()
             ) {
                 for (i in 0 until otpLength) {
+                    val interactionSource = remember { MutableInteractionSource() }
+                    val isFocused = interactionSource.collectIsFocusedAsState().value
                     OutlinedTextField(
                         value = otpInputs[i],
-                        onValueChange = {
-                            if (it.length <= 1 && it.all { c -> c.isDigit() }) {
-                                otpInputs = otpInputs.toMutableList().also { list -> list[i] = it }
+                        onValueChange = { newValue: String ->
+                            if (newValue.length <= 1 && (newValue.isEmpty() || newValue.all { c: Char -> c.isDigit() })) {
+                                val newInputs = otpInputs.toMutableList()
+                                newInputs[i] = newValue
+                                otpInputs = newInputs
                                 viewModel.setOtp(otpInputs.joinToString(""))
+                                if (newValue.isNotEmpty() && i < otpLength - 1) {
+                                    focusRequesters[i + 1].requestFocus()
+                                }
+                                if (newValue.isEmpty() && i > 0) {
+                                    focusRequesters[i - 1].requestFocus()
+                                }
                             }
                         },
                         modifier = Modifier
-                            .width(40.dp)
+                            .width(48.dp)
                             .height(56.dp)
-                            .padding(horizontal = 4.dp),
-                        textStyle = TextStyle(fontSize = 20.sp, color = Color.Black, textAlign = androidx.compose.ui.text.style.TextAlign.Center),
-                        singleLine = true,
-                        shape = RoundedCornerShape(8.dp),
-                        keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
-                        colors = OutlinedTextFieldDefaults.colors(
-                            focusedBorderColor = blue,
-                            unfocusedBorderColor = Color.Black,
-                            errorBorderColor = Color.Red,
-                            focusedLabelColor = blue,
-                            unfocusedLabelColor = Color.Black
+                            .focusRequester(focusRequesters[i]),
+                        shape = RoundedCornerShape(16.dp),
+                        textStyle = TextStyle(
+                            fontSize = 22.sp,
+                            fontWeight = FontWeight.Bold,
+                            color = Color.Black,
+                            textAlign = TextAlign.Center
                         ),
-                        visualTransformation = VisualTransformation.None
+                        singleLine = true,
+                        visualTransformation = VisualTransformation.None,
+                        interactionSource = interactionSource,
+                        maxLines = 1,
+                        isError = state.error != null
                     )
+                    Spacer(modifier = Modifier.width(8.dp))
                 }
             }
             Spacer(modifier = Modifier.height(24.dp))

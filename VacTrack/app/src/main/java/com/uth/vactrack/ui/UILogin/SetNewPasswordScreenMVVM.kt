@@ -35,6 +35,7 @@ fun SetNewPasswordScreenMVVM(
     val state by viewModel.state.collectAsStateWithLifecycle()
     val blue = Color(0xFF1976D2)
     var passwordVisible by remember { mutableStateOf(false) }
+    var confirmPasswordVisible by remember { mutableStateOf(false) }
 
     LaunchedEffect(state.error) {
         state.error?.let {
@@ -110,6 +111,32 @@ fun SetNewPasswordScreenMVVM(
                     unfocusedLabelColor = Color.Black
                 ),
             )
+            Spacer(modifier = Modifier.height(16.dp))
+            OutlinedTextField(
+                value = state.confirmPassword,
+                onValueChange = { viewModel.setConfirmPassword(it) },
+                label = { Text("Confirm Password") },
+                singleLine = true,
+                isError = state.confirmPassword.isNotBlank() && state.confirmPassword != state.newPassword,
+                visualTransformation = if (confirmPasswordVisible) VisualTransformation.None else PasswordVisualTransformation(),
+                trailingIcon = {
+                    val icon = if (confirmPasswordVisible) R.drawable.ic_visibility else R.drawable.ic_visibility_off
+                    Icon(
+                        painter = painterResource(id = icon),
+                        contentDescription = if (confirmPasswordVisible) "Hide" else "Show",
+                        modifier = Modifier.clickable { confirmPasswordVisible = !confirmPasswordVisible }
+                    )
+                },
+                modifier = Modifier.fillMaxWidth(),
+                shape = RoundedCornerShape(14.dp),
+                colors = OutlinedTextFieldDefaults.colors(
+                    focusedBorderColor = blue,
+                    unfocusedBorderColor = Color.Black,
+                    errorBorderColor = Color.Red,
+                    focusedLabelColor = blue,
+                    unfocusedLabelColor = Color.Black
+                ),
+            )
             Spacer(modifier = Modifier.height(24.dp))
             Button(
                 onClick = { viewModel.resetPassword(resetToken) },
@@ -117,9 +144,9 @@ fun SetNewPasswordScreenMVVM(
                     .fillMaxWidth()
                     .height(48.dp),
                 shape = RoundedCornerShape(16.dp),
-                enabled = state.newPassword.length >= 6 && !state.isLoading,
+                enabled = state.newPassword.length >= 6 && state.confirmPassword == state.newPassword && !state.isLoading,
                 colors = ButtonDefaults.buttonColors(
-                    containerColor = if (state.newPassword.length >= 6) blue else Color(0xFFB0B8E6)
+                    containerColor = if (state.newPassword.length >= 6 && state.confirmPassword == state.newPassword) blue else Color(0xFFB0B8E6)
                 )
             ) {
                 if (state.isLoading) CircularProgressIndicator(color = Color.White, modifier = Modifier.size(20.dp))

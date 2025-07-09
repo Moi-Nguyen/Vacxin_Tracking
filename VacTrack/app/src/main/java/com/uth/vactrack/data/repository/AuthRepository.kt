@@ -144,7 +144,7 @@ class AuthRepository {
     suspend fun forgotPassword(email: String): Result<String> {
         return withContext(Dispatchers.IO) {
             try {
-                val url = URL("${AppConfig.BASE_URL}/api/auth/forgot-password")
+                val url = URL("${AppConfig.BASE_URL}/api/auth/request-reset")
                 val conn = url.openConnection() as HttpURLConnection
                 conn.requestMethod = "POST"
                 conn.setRequestProperty("Content-Type", "application/json")
@@ -172,7 +172,7 @@ class AuthRepository {
     suspend fun resetPassword(token: String, newPassword: String): Result<String> {
         return withContext(Dispatchers.IO) {
             try {
-                val url = URL("${AppConfig.BASE_URL}/api/auth/reset-password")
+                val url = URL("${AppConfig.BASE_URL}/api/auth/change-password")
                 val conn = url.openConnection() as HttpURLConnection
                 conn.requestMethod = "POST"
                 conn.setRequestProperty("Content-Type", "application/json")
@@ -191,6 +191,35 @@ class AuthRepository {
                     Result.success(json.getString("message"))
                 } else {
                     Result.failure(Exception(json.optString("message", "Failed to reset password")))
+                }
+            } catch (e: Exception) {
+                Result.failure(e)
+            }
+        }
+    }
+
+    suspend fun verifyOtp(email: String, otp: String): Result<String> {
+        return withContext(Dispatchers.IO) {
+            try {
+                val url = URL("${AppConfig.BASE_URL}/api/auth/verify-otp")
+                val conn = url.openConnection() as HttpURLConnection
+                conn.requestMethod = "POST"
+                conn.setRequestProperty("Content-Type", "application/json")
+                conn.doOutput = true
+
+                val body = JSONObject().apply {
+                    put("email", email)
+                    put("otp", otp)
+                }.toString()
+
+                conn.outputStream.use { it.write(body.toByteArray()) }
+                val response = conn.inputStream.bufferedReader().readText()
+                val json = JSONObject(response)
+
+                if (conn.responseCode == 200) {
+                    Result.success(json.getString("message"))
+                } else {
+                    Result.failure(Exception(json.optString("message", "OTP verification failed")))
                 }
             } catch (e: Exception) {
                 Result.failure(e)

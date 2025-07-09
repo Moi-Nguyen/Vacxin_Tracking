@@ -21,6 +21,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
@@ -39,54 +40,79 @@ fun BottomNavigationBarMVVM(
     onTabSelected: (Int) -> Unit,
     onFabClick: () -> Unit
 ) {
+    // Định nghĩa tab cho dễ quản lý
+    val tabs = listOf(
+        Triple("Home", R.drawable.ic_home, 0),
+        Triple("Record", R.drawable.ic_record, 1),
+        Triple("Log", R.drawable.ic_log, 2),
+        Triple("Profile", R.drawable.ic_user, 3)
+    )
     Box {
+        // Thanh điều hướng bo góc, nổi
         NavigationBar(
-            containerColor = MaterialTheme.colorScheme.background,
+            containerColor = MaterialTheme.colorScheme.surface,
             tonalElevation = 8.dp,
-            modifier = Modifier.height(64.dp)
+            modifier = Modifier
+                .height(72.dp)
+                .clip(RoundedCornerShape(topStart = 24.dp, topEnd = 24.dp))
+                .shadow(8.dp)
         ) {
-            NavigationBarItem(
-                icon = { Icon(painterResource(id = R.drawable.ic_home), contentDescription = "Home") },
-                label = { Text("Home") },
-                selected = selectedIndex == 0,
-                onClick = { onTabSelected(0) }
-            )
-            NavigationBarItem(
-                icon = { Icon(painterResource(id = R.drawable.ic_record), contentDescription = "Record") },
-                label = { Text("Record") },
-                selected = selectedIndex == 1,
-                onClick = { onTabSelected(1) }
-            )
+            tabs.take(2).forEach { (label, icon, idx) ->
+                NavigationBarItem(
+                    icon = {
+                        Icon(
+                            painterResource(id = icon),
+                            contentDescription = label,
+                            tint = if (selectedIndex == idx) MaterialTheme.colorScheme.primary else Color.Gray,
+                            modifier = Modifier.size(28.dp)
+                        )
+                    },
+                    label = {
+                        if (selectedIndex == idx) Text(label, fontSize = 12.sp)
+                    },
+                    selected = selectedIndex == idx,
+                    onClick = { onTabSelected(idx) },
+                    alwaysShowLabel = false
+                )
+            }
             Spacer(Modifier.weight(1f, true)) // Chừa chỗ cho FAB
-            NavigationBarItem(
-                icon = { Icon(painterResource(id = R.drawable.ic_log), contentDescription = "Log") },
-                label = { Text("Log") },
-                selected = selectedIndex == 2,
-                onClick = { onTabSelected(2) }
-            )
-            NavigationBarItem(
-                icon = { Icon(painterResource(id = R.drawable.ic_user), contentDescription = "Profile") },
-                label = { Text("Profile") },
-                selected = selectedIndex == 3,
-                onClick = { onTabSelected(3) }
-            )
+            tabs.drop(2).forEach { (label, icon, idx) ->
+                NavigationBarItem(
+                    icon = {
+                        Icon(
+                            painterResource(id = icon),
+                            contentDescription = label,
+                            tint = if (selectedIndex == idx) MaterialTheme.colorScheme.primary else Color.Gray,
+                            modifier = Modifier.size(28.dp)
+                        )
+                    },
+                    label = {
+                        if (selectedIndex == idx) Text(label, fontSize = 12.sp)
+                    },
+                    selected = selectedIndex == idx,
+                    onClick = { onTabSelected(idx) },
+                    alwaysShowLabel = false
+                )
+            }
         }
+        // FAB nổi bật ở giữa
         Box(
             modifier = Modifier
                 .fillMaxWidth()
-                .height(64.dp),
+                .height(72.dp),
             contentAlignment = Alignment.TopCenter
         ) {
             FloatingActionButton(
                 onClick = onFabClick,
                 containerColor = MaterialTheme.colorScheme.primary,
                 contentColor = Color.White,
+                shape = CircleShape,
+                elevation = FloatingActionButtonDefaults.elevation(12.dp),
                 modifier = Modifier
-                    .offset(y = (-28).dp)
-                    .size(56.dp),
-                elevation = FloatingActionButtonDefaults.elevation(8.dp)
+                    .offset(y = (-32).dp)
+                    .size(68.dp)
             ) {
-                Icon(Icons.Default.Add, contentDescription = "Add")
+                Icon(Icons.Default.Add, contentDescription = "Add", modifier = Modifier.size(36.dp))
             }
         }
     }
