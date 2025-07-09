@@ -11,7 +11,10 @@ import kotlinx.coroutines.flow.asStateFlow
 data class SharedState(
     val currentUser: User? = null,
     val isDarkTheme: Boolean = false,
-    val isLoggedIn: Boolean = false
+    val isLoggedIn: Boolean = false,
+    val token: String? = null,
+    val selectedServiceId: String? = null,
+    val selectedFacilityId: String? = null
 )
 
 class SharedViewModel : ViewModel() {
@@ -63,5 +66,15 @@ class SharedViewModel : ViewModel() {
     fun logout(context: android.content.Context? = null) {
         authRepository.signOut(context)
         clearCurrentUser()
+    }
+
+    fun setToken(token: String) {
+        _sharedState.value = _sharedState.value.copy(token = token)
+    }
+    fun setSelectedServiceId(serviceId: String) {
+        _sharedState.value = _sharedState.value.copy(selectedServiceId = serviceId)
+    }
+    fun setSelectedFacilityId(facilityId: String) {
+        _sharedState.value = _sharedState.value.copy(selectedFacilityId = facilityId)
     }
 } 

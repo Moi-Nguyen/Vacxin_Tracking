@@ -69,6 +69,7 @@ class AppointmentViewModel : ViewModel() {
     }
 
     fun bookAppointment(
+        token: String,
         userId: String,
         serviceId: String,
         facilityId: String,
@@ -77,7 +78,8 @@ class AppointmentViewModel : ViewModel() {
     ) {
         _state.value = _state.value.copy(isLoading = true, error = null, message = null)
         viewModelScope.launch {
-            val result = repository.bookAppointment(
+            val result = repository.bookAppointmentWithApi(
+                token,
                 BookingRequest(
                     userId = userId,
                     serviceId = serviceId,

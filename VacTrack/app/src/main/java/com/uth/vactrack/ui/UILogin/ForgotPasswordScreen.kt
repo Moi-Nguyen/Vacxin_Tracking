@@ -1,9 +1,7 @@
 package com.uth.vactrack.ui.UILogin
 
 import android.widget.Toast
-import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.*
@@ -18,60 +16,42 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.VisualTransformation
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import androidx.lifecycle.viewmodel.compose.viewModel
 import com.uth.vactrack.R
-import com.uth.vactrack.config.AppConfig
-import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.launch
-import kotlinx.coroutines.withContext
-import org.json.JSONObject
-import java.net.HttpURLConnection
-import java.net.URL
-import androidx.compose.material3.TextFieldDefaults
+import com.uth.vactrack.ui.viewmodel.ForgotPasswordViewModel
 
 @Composable
 fun ForgotPasswordScreen(
     initialEmail: String = "",
     onBack: () -> Unit = {},
     onRequestResetSuccess: (String) -> Unit = {},
+    viewModel: ForgotPasswordViewModel = viewModel()
 ) {
     val context = LocalContext.current
-    var email by remember { mutableStateOf(initialEmail) }
-    var loading by remember { mutableStateOf(false) }
-    var error by remember { mutableStateOf<String?>(null) }
-    val isEmailValid = android.util.Patterns.EMAIL_ADDRESS.matcher(email).matches()
-    val canReset = isEmailValid && !loading
+    val state by viewModel.state.collectAsStateWithLifecycle()
     val blue = Color(0xFF1976D2)
 
-    fun showToast(msg: String) {
-        Toast.makeText(context, msg, Toast.LENGTH_SHORT).show()
+    LaunchedEffect(initialEmail) {
+        if (initialEmail.isNotBlank()) viewModel.setEmail(initialEmail)
     }
 
-    fun requestReset() {
-        loading = true
-        error = null
-        CoroutineScope(Dispatchers.IO).launch {
-            try {
-                val url = URL("${AppConfig.BASE_URL}/api/auth/request-reset")
-                val conn = url.openConnection() as HttpURLConnection
-                conn.requestMethod = "POST"
-                conn.setRequestProperty("Content-Type", "application/json")
-                conn.doOutput = true
-                val body = JSONObject().apply { put("email", email) }.toString()
-                conn.outputStream.use { it.write(body.toByteArray()) }
-                val response = conn.inputStream.bufferedReader().readText()
-                val json = JSONObject(response)
-                withContext(Dispatchers.Main) {
-                    loading = false
-                    showToast(json.optString("message", "Check your email!"))
-                    onRequestResetSuccess(email)
-                }
-            } catch (e: Exception) {
-                withContext(Dispatchers.Main) {
-                    loading = false
-                    error = e.localizedMessage ?: "Request failed"
-                }
-            }
+    LaunchedEffect(state.error) {
+        state.error?.let {
+            Toast.makeText(context, it, Toast.LENGTH_SHORT).show()
+            viewModel.clearError()
+        }
+    }
+    LaunchedEffect(state.message) {
+        state.message?.let {
+            Toast.makeText(context, it, Toast.LENGTH_SHORT).show()
+            viewModel.clearMessage()
+        }
+    }
+    LaunchedEffect(state.success) {
+        if (state.success) {
+            onRequestResetSuccess(state.email)
+            viewModel.resetSuccess()
         }
     }
 
@@ -83,7 +63,6 @@ fun ForgotPasswordScreen(
         Column(
             modifier = Modifier
                 .fillMaxWidth()
-                //.align(Alignment.Center)
                 .padding(horizontal = 24.dp),
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
@@ -100,31 +79,12 @@ fun ForgotPasswordScreen(
                 }
             }
             Spacer(modifier = Modifier.height(8.dp))
-            Image(
-                painter = painterResource(id = R.drawable.img_logo_xoanen),
-                contentDescription = "Logo VacTrack",
-                modifier = Modifier.size(240.dp)
+            Text(
+                text = "Forgot Password",
+                style = TextStyle(fontWeight = FontWeight.Bold, fontSize = 20.sp, color = Color.Black),
+                modifier = Modifier.fillMaxWidth()
             )
             Spacer(modifier = Modifier.height(16.dp))
-            Text(
-                text = "Forgot password",
-                style = TextStyle(
-                    fontWeight = FontWeight.Bold,
-                    fontSize = 20.sp,
-                    color = Color.Black
-                ),
-                modifier = Modifier.fillMaxWidth()
-            )
-            Spacer(modifier = Modifier.height(4.dp))
-            Text(
-                text = "Please enter your email to reset the password",
-                style = TextStyle(
-                    fontSize = 15.sp,
-                    color = Color(0xFF888888)
-                ),
-                modifier = Modifier.fillMaxWidth()
-            )
-            Spacer(modifier = Modifier.height(24.dp))
             Text(
                 text = "Your Email",
                 style = TextStyle(fontWeight = FontWeight.Medium, fontSize = 15.sp),
@@ -132,16 +92,12 @@ fun ForgotPasswordScreen(
             )
             Spacer(modifier = Modifier.height(8.dp))
             OutlinedTextField(
-                value = email,
-                onValueChange = {
-                    email = it
-                    if (error != null) error = null
-                },
+                value = state.email,
+                onValueChange = { viewModel.setEmail(it) },
                 placeholder = { Text("Enter your email") },
                 singleLine = true,
-                isError = email.isNotBlank() && !isEmailValid,
-                modifier = Modifier
-                    .fillMaxWidth(),
+                isError = state.email.isNotBlank() && !android.util.Patterns.EMAIL_ADDRESS.matcher(state.email).matches(),
+                modifier = Modifier.fillMaxWidth(),
                 shape = RoundedCornerShape(12.dp),
                 colors = OutlinedTextFieldDefaults.colors(
                     focusedBorderColor = blue,
@@ -152,23 +108,20 @@ fun ForgotPasswordScreen(
                 ),
                 visualTransformation = VisualTransformation.None
             )
-            if (error != null) {
-                Text(error!!, color = Color.Red, fontSize = 14.sp, modifier = Modifier.padding(top = 4.dp))
-            }
             Spacer(modifier = Modifier.height(24.dp))
             Button(
-                onClick = { requestReset() },
+                onClick = { viewModel.requestReset() },
                 modifier = Modifier
                     .fillMaxWidth()
                     .height(48.dp),
                 shape = RoundedCornerShape(12.dp),
-                enabled = canReset,
+                enabled = android.util.Patterns.EMAIL_ADDRESS.matcher(state.email).matches() && !state.isLoading,
                 colors = ButtonDefaults.buttonColors(
-                    containerColor = if (canReset) blue else Color(0xFFB0B8E6)
+                    containerColor = if (android.util.Patterns.EMAIL_ADDRESS.matcher(state.email).matches()) blue else Color(0xFFB0B8E6)
                 )
             ) {
-                if (loading) CircularProgressIndicator(color = Color.White, modifier = Modifier.size(20.dp))
-                else Text("Reset Password", fontWeight = FontWeight.Bold, color = Color.White)
+                if (state.isLoading) CircularProgressIndicator(color = Color.White, modifier = Modifier.size(20.dp))
+                else Text("Send Reset Email", fontWeight = FontWeight.Bold, color = Color.White)
             }
         }
     }

@@ -15,7 +15,8 @@ data class AuthState(
     val user: User? = null,
     val isLoggedIn: Boolean = false,
     val error: String? = null,
-    val message: String? = null
+    val message: String? = null,
+    val token: String? = null
 )
 
 class AuthViewModel : ViewModel() {
@@ -51,7 +52,8 @@ class AuthViewModel : ViewModel() {
                         isLoading = false,
                         user = response.user,
                         isLoggedIn = true,
-                        message = response.message
+                        message = response.message,
+                        token = response.token
                     )
                 }
                 .onFailure { exception ->
@@ -76,7 +78,8 @@ class AuthViewModel : ViewModel() {
                         isLoading = false,
                         user = response.user,
                         isLoggedIn = true,
-                        message = response.message
+                        message = response.message,
+                        token = response.token
                     )
                 }
                 .onFailure { exception ->

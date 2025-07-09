@@ -11,7 +11,12 @@ data class BookingDetail(
     val userId: String,
     val serviceId: String,
     val facilityId: String,
+    val facilityName: String? = null,
     val date: String,
     val time: String,
-    val status: String
+    val status: String,
+    val doseNumber: Int? = null,
+    val price: Int? = null,
+    val paymentStatus: String? = null,
+    val doctorName: String? = null
 ) 

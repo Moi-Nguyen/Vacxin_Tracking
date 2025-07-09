@@ -1,8 +1,9 @@
 package com.uth.vactrack.ui.UILogin
 
 import android.widget.Toast
-import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
+import androidx.compose.foundation.Image
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.*
@@ -11,64 +12,47 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.TextStyle
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.text.input.VisualTransformation
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import com.uth.vactrack.config.AppConfig
-import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.launch
-import kotlinx.coroutines.withContext
-import org.json.JSONObject
-import java.net.HttpURLConnection
-import java.net.URL
-import androidx.compose.ui.res.painterResource
-import androidx.compose.ui.text.font.FontWeight
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import androidx.lifecycle.viewmodel.compose.viewModel
+import com.uth.vactrack.R
+import com.uth.vactrack.ui.viewmodel.SetNewPasswordViewModel
 
 @Composable
 fun SetNewPasswordScreen(
     resetToken: String,
-    onPasswordReset: () -> Unit,
-    onBack: () -> Unit
+    onPasswordReset: () -> Unit = {},
+    onBack: () -> Unit = {},
+    viewModel: SetNewPasswordViewModel = viewModel()
 ) {
     val context = LocalContext.current
-    var password by remember { mutableStateOf("") }
-    var confirmPassword by remember { mutableStateOf("") }
-    var error by remember { mutableStateOf<String?>(null) }
-    var loading by remember { mutableStateOf(false) }
+    val state by viewModel.state.collectAsStateWithLifecycle()
     val blue = Color(0xFF1976D2)
-    val canUpdate = password.length >= 6 && password == confirmPassword && !loading
+    var passwordVisible by remember { mutableStateOf(false) }
+    var confirmPasswordVisible by remember { mutableStateOf(false) }
 
-    fun updatePassword() {
-        loading = true
-        error = null
-        CoroutineScope(Dispatchers.IO).launch {
-            try {
-                val url = URL("${AppConfig.BASE_URL}/api/auth/set-new-password")
-                val conn = url.openConnection() as HttpURLConnection
-                conn.requestMethod = "POST"
-                conn.setRequestProperty("Content-Type", "application/json")
-                conn.setRequestProperty("Authorization", "Bearer $resetToken")
-                conn.doOutput = true
-                val body = JSONObject().apply {
-                    put("newPassword", password)
-                }.toString()
-                conn.outputStream.use { it.write(body.toByteArray()) }
-                val response = conn.inputStream.bufferedReader().readText()
-                val json = JSONObject(response)
-                withContext(Dispatchers.Main) {
-                    loading = false
-                    Toast.makeText(context, json.optString("message", "Password reset!"), Toast.LENGTH_SHORT).show()
-                    onPasswordReset()
-                }
-            } catch (e: Exception) {
-                withContext(Dispatchers.Main) {
-                    loading = false
-                    error = e.localizedMessage ?: "Lỗi đặt lại mật khẩu"
-                }
-            }
+    LaunchedEffect(state.error) {
+        state.error?.let {
+            Toast.makeText(context, it, Toast.LENGTH_SHORT).show()
+            viewModel.clearError()
+        }
+    }
+    LaunchedEffect(state.message) {
+        state.message?.let {
+            Toast.makeText(context, it, Toast.LENGTH_SHORT).show()
+            viewModel.clearMessage()
+        }
+    }
+    LaunchedEffect(state.success) {
+        if (state.success) {
+            onPasswordReset()
+            viewModel.resetSuccess()
         }
     }
 
@@ -90,92 +74,83 @@ fun SetNewPasswordScreen(
             ) {
                 IconButton(onClick = onBack) {
                     Icon(
-                        painter = painterResource(id = com.uth.vactrack.R.drawable.ic_arrow_back),
+                        painter = painterResource(id = R.drawable.ic_arrow_back),
                         contentDescription = "Back"
                     )
                 }
             }
             Spacer(modifier = Modifier.height(8.dp))
-            Image(
-                painter = painterResource(id = com.uth.vactrack.R.drawable.img_logo_xoanen),
-                contentDescription = "Logo VacTrack",
-                modifier = Modifier.size(240.dp)
-            )
-            Spacer(modifier = Modifier.height(8.dp))
             Text(
-                text = "Set a new password",
-                style = TextStyle(fontWeight = FontWeight.Bold, fontSize = 18.sp, color = Color.Black),
-                modifier = Modifier.fillMaxWidth()
-            )
-            Spacer(modifier = Modifier.height(4.dp))
-            Text(
-                text = "Create a new password. Ensure it differs from previous ones for security",
-                style = TextStyle(fontSize = 14.sp, color = Color(0xFF888888)),
+                text = "Set New Password",
+                style = TextStyle(fontWeight = FontWeight.Bold, fontSize = 20.sp, color = Color.Black),
                 modifier = Modifier.fillMaxWidth()
             )
             Spacer(modifier = Modifier.height(24.dp))
-            Text("Password", fontWeight = FontWeight.Medium, fontSize = 15.sp, modifier = Modifier.fillMaxWidth())
-            Spacer(modifier = Modifier.height(8.dp))
             OutlinedTextField(
-                value = password,
-                onValueChange = {
-                    password = it
-                    if (error != null) error = null
-                },
-                placeholder = { Text("Enter your new password") },
+                value = state.newPassword,
+                onValueChange = { viewModel.setNewPassword(it) },
+                label = { Text("New Password") },
                 singleLine = true,
-                isError = password.isNotBlank() && password.length < 6,
+                isError = state.newPassword.isNotBlank() && state.newPassword.length < 6,
+                visualTransformation = if (passwordVisible) VisualTransformation.None else PasswordVisualTransformation(),
+                trailingIcon = {
+                    val icon = if (passwordVisible) R.drawable.ic_visibility else R.drawable.ic_visibility_off
+                    Icon(
+                        painter = painterResource(id = icon),
+                        contentDescription = if (passwordVisible) "Hide" else "Show",
+                        modifier = Modifier.clickable { passwordVisible = !passwordVisible }
+                    )
+                },
                 modifier = Modifier.fillMaxWidth(),
-                shape = RoundedCornerShape(12.dp),
-                visualTransformation = PasswordVisualTransformation(),
+                shape = RoundedCornerShape(14.dp),
                 colors = OutlinedTextFieldDefaults.colors(
                     focusedBorderColor = blue,
                     unfocusedBorderColor = Color.Black,
                     errorBorderColor = Color.Red,
                     focusedLabelColor = blue,
                     unfocusedLabelColor = Color.Black
-                )
+                ),
             )
             Spacer(modifier = Modifier.height(16.dp))
-            Text("Confirm Password", fontWeight = FontWeight.Medium, fontSize = 15.sp, modifier = Modifier.fillMaxWidth())
-            Spacer(modifier = Modifier.height(8.dp))
             OutlinedTextField(
-                value = confirmPassword,
-                onValueChange = {
-                    confirmPassword = it
-                    if (error != null) error = null
-                },
-                placeholder = { Text("Re-enter password") },
+                value = state.confirmPassword,
+                onValueChange = { viewModel.setConfirmPassword(it) },
+                label = { Text("Confirm Password") },
                 singleLine = true,
-                isError = confirmPassword.isNotBlank() && confirmPassword != password,
+                isError = state.confirmPassword.isNotBlank() && state.confirmPassword != state.newPassword,
+                visualTransformation = if (confirmPasswordVisible) VisualTransformation.None else PasswordVisualTransformation(),
+                trailingIcon = {
+                    val icon = if (confirmPasswordVisible) R.drawable.ic_visibility else R.drawable.ic_visibility_off
+                    Icon(
+                        painter = painterResource(id = icon),
+                        contentDescription = if (confirmPasswordVisible) "Hide" else "Show",
+                        modifier = Modifier.clickable { confirmPasswordVisible = !confirmPasswordVisible }
+                    )
+                },
                 modifier = Modifier.fillMaxWidth(),
-                shape = RoundedCornerShape(12.dp),
-                visualTransformation = PasswordVisualTransformation(),
+                shape = RoundedCornerShape(14.dp),
                 colors = OutlinedTextFieldDefaults.colors(
-                    focusedBorderColor = Color(0xFF22306A),
-                    unfocusedBorderColor = Color(0xFFB0B8E6),
+                    focusedBorderColor = blue,
+                    unfocusedBorderColor = Color.Black,
                     errorBorderColor = Color.Red,
-                    focusedLabelColor = Color(0xFF22306A),
-                    unfocusedLabelColor = Color(0xFFB0B8E6)
-                )
+                    focusedLabelColor = blue,
+                    unfocusedLabelColor = Color.Black
+                ),
             )
-            if (error != null) {
-                Text(error!!, color = Color.Red, fontSize = 14.sp, modifier = Modifier.padding(top = 4.dp))
-            }
             Spacer(modifier = Modifier.height(24.dp))
             Button(
-                onClick = { updatePassword() },
+                onClick = { viewModel.resetPassword(resetToken) },
                 modifier = Modifier
                     .fillMaxWidth()
                     .height(48.dp),
-                shape = RoundedCornerShape(12.dp),
-                enabled = canUpdate,
+                shape = RoundedCornerShape(16.dp),
+                enabled = state.newPassword.length >= 6 && state.confirmPassword == state.newPassword && !state.isLoading,
                 colors = ButtonDefaults.buttonColors(
-                    containerColor = if (canUpdate) blue else Color(0xFFB0B8E6)
+                    containerColor = if (state.newPassword.length >= 6 && state.confirmPassword == state.newPassword) blue else Color(0xFFB0B8E6)
                 )
             ) {
-                if (loading) CircularProgressIndicator(color = Color.White, modifier = Modifier.size(20.dp))
-                else Text("Update Password", fontWeight = FontWeight.Bold, color = Color.White)
+                if (state.isLoading) CircularProgressIndicator(color = Color.White, modifier = Modifier.size(20.dp))
+                else Text("Set Password", fontWeight = FontWeight.Bold, color = Color.White)
             }
         }
     }

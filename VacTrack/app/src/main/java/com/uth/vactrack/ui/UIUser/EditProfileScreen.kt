@@ -1,5 +1,6 @@
 package com.uth.vactrack.ui.UIUser
 
+import android.widget.Toast
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
@@ -16,39 +17,48 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
-import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import androidx.lifecycle.viewmodel.compose.viewModel
 import com.uth.vactrack.R
-import com.uth.vactrack.ui.theme.VacTrackTheme
+import com.uth.vactrack.ui.viewmodel.EditProfileViewModel
+import com.uth.vactrack.ui.viewmodel.SharedViewModel
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun EditProfileScreen(
     onBack: () -> Unit = {},
-    onSubmit: () -> Unit = {}
+    onSubmit: () -> Unit = {},
+    editProfileViewModel: EditProfileViewModel = viewModel(),
+    sharedViewModel: SharedViewModel = viewModel()
 ) {
-    val fullName = remember { mutableStateOf("") }
-    val nickName = remember { mutableStateOf("") }
-    val email = remember { mutableStateOf("") }
-    val phone = remember { mutableStateOf("") }
-    val address = remember { mutableStateOf("") }
-
+    val context = LocalContext.current
+    val state by editProfileViewModel.state.collectAsStateWithLifecycle()
+    
     val genderOptions = listOf("Male", "Female", "Other")
-    var selectedGender by remember { mutableStateOf("") }
-    var expandedGender by remember { mutableStateOf(false) }
-
     val blue = Color(0xFF1976D2)
 
-    val isFormValid = fullName.value.isNotBlank()
-            && nickName.value.isNotBlank()
-            && email.value.isNotBlank()
-            && phone.value.isNotBlank()
-            && selectedGender.isNotBlank()
-            && address.value.isNotBlank()
+    // Handle success
+    LaunchedEffect(state.success) {
+        if (state.success) {
+            Toast.makeText(context, state.message ?: "Cập nhật thành công", Toast.LENGTH_SHORT).show()
+            editProfileViewModel.resetSuccess()
+            onSubmit()
+        }
+    }
+
+    // Handle error
+    LaunchedEffect(state.error) {
+        state.error?.let { error ->
+            Toast.makeText(context, error, Toast.LENGTH_SHORT).show()
+            editProfileViewModel.clearError()
+        }
+    }
 
     Scaffold(
         topBar = {
@@ -82,22 +92,22 @@ fun EditProfileScreen(
             Spacer(modifier = Modifier.height(16.dp))
 
             OutlinedTextField(
-                value = fullName.value,
-                onValueChange = { fullName.value = it },
+                value = state.fullName,
+                onValueChange = { editProfileViewModel.updateFullName(it) },
                 label = { Text("Full name") },
                 modifier = Modifier.fillMaxWidth()
             )
 
             OutlinedTextField(
-                value = nickName.value,
-                onValueChange = { nickName.value = it },
+                value = state.nickName,
+                onValueChange = { editProfileViewModel.updateNickName(it) },
                 label = { Text("Nick name") },
                 modifier = Modifier.fillMaxWidth()
             )
 
             OutlinedTextField(
-                value = email.value,
-                onValueChange = { email.value = it },
+                value = state.email,
+                onValueChange = { editProfileViewModel.updateEmail(it) },
                 label = { Text("Email") },
                 modifier = Modifier.fillMaxWidth()
             )
@@ -112,19 +122,19 @@ fun EditProfileScreen(
                 )
                 Spacer(modifier = Modifier.width(8.dp))
                 OutlinedTextField(
-                    value = phone.value,
-                    onValueChange = { phone.value = it },
+                    value = state.phone,
+                    onValueChange = { editProfileViewModel.updatePhone(it) },
                     label = { Text("Phone number") },
                     modifier = Modifier.weight(1f)
                 )
             }
 
             ExposedDropdownMenuBox(
-                expanded = expandedGender,
-                onExpandedChange = { expandedGender = !expandedGender }
+                expanded = state.expandedGender,
+                onExpandedChange = { editProfileViewModel.toggleGenderDropdown() }
             ) {
                 OutlinedTextField(
-                    value = selectedGender,
+                    value = state.selectedGender,
                     onValueChange = {},
                     readOnly = true,
                     label = { Text("Gender") },
@@ -136,15 +146,14 @@ fun EditProfileScreen(
                         .fillMaxWidth()
                 )
                 ExposedDropdownMenu(
-                    expanded = expandedGender,
-                    onDismissRequest = { expandedGender = false }
+                    expanded = state.expandedGender,
+                    onDismissRequest = { editProfileViewModel.toggleGenderDropdown() }
                 ) {
                     genderOptions.forEach { option ->
                         DropdownMenuItem(
                             text = { Text(option) },
                             onClick = {
-                                selectedGender = option
-                                expandedGender = false
+                                editProfileViewModel.updateGender(option)
                             }
                         )
                     }
@@ -152,8 +161,8 @@ fun EditProfileScreen(
             }
 
             OutlinedTextField(
-                value = address.value,
-                onValueChange = { address.value = it },
+                value = state.address,
+                onValueChange = { editProfileViewModel.updateAddress(it) },
                 label = { Text("Address") },
                 modifier = Modifier.fillMaxWidth()
             )
@@ -161,28 +170,28 @@ fun EditProfileScreen(
             Spacer(modifier = Modifier.height(24.dp))
 
             Button(
-                onClick = onSubmit,
-                enabled = isFormValid,
+                onClick = { editProfileViewModel.updateProfile() },
+                enabled = editProfileViewModel.isFormValid() && !state.isLoading,
                 modifier = Modifier
                     .fillMaxWidth()
                     .height(50.dp),
                 colors = ButtonDefaults.buttonColors(
-                    containerColor = if (isFormValid) blue else Color.Gray
+                    containerColor = if (editProfileViewModel.isFormValid() && !state.isLoading) blue else Color.Gray
                 ),
                 shape = RoundedCornerShape(8.dp)
             ) {
-                Text("SUBMIT", color = Color.White, fontWeight = FontWeight.Bold)
+                if (state.isLoading) {
+                    CircularProgressIndicator(
+                        modifier = Modifier.size(20.dp),
+                        color = Color.White,
+                        strokeWidth = 2.dp
+                    )
+                } else {
+                    Text("SUBMIT", color = Color.White, fontWeight = FontWeight.Bold)
+                }
             }
 
             Spacer(modifier = Modifier.height(24.dp))
         }
     }
-}
-
-@Preview(showBackground = true, showSystemUi = true)
-@Composable
-fun EditProfileScreenPreview() {
-    VacTrackTheme {
-        EditProfileScreen()
-    }
-}
+} 

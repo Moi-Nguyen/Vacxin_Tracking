@@ -1,27 +1,29 @@
 package com.uth.vactrack.ui.UIUser
 
-import android.net.Uri
-import androidx.compose.foundation.Image
-import androidx.compose.foundation.background
+import android.widget.Toast
+import androidx.compose.foundation.*
 import androidx.compose.foundation.layout.*
-import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.*
-import androidx.compose.runtime.Composable
+import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import androidx.lifecycle.viewmodel.compose.viewModel
 import coil.compose.AsyncImage
 import com.uth.vactrack.R
-import com.uth.vactrack.ui.theme.VacTrackTheme
+import com.uth.vactrack.ui.viewmodel.PaymentViewModel
+import com.uth.vactrack.ui.viewmodel.SharedViewModel
+import com.uth.vactrack.ui.UIUser.BottomNavigationBar
 import java.net.URLEncoder
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -33,8 +35,30 @@ fun PaymentScreen(
     bill: Int,
     onBack: () -> Unit = {},
     onCancel: () -> Unit = {},
-    onPay: () -> Unit = {}
+    onPay: () -> Unit = {},
+    paymentViewModel: PaymentViewModel = viewModel(),
+    sharedViewModel: SharedViewModel = viewModel()
 ) {
+    val context = LocalContext.current
+    val state by paymentViewModel.state.collectAsStateWithLifecycle()
+
+    // Handle success
+    LaunchedEffect(state.success) {
+        if (state.success) {
+            Toast.makeText(context, state.message ?: "Thanh toán thành công", Toast.LENGTH_SHORT).show()
+            paymentViewModel.resetSuccess()
+            onPay()
+        }
+    }
+
+    // Handle error
+    LaunchedEffect(state.error) {
+        state.error?.let { error ->
+            Toast.makeText(context, error, Toast.LENGTH_SHORT).show()
+            paymentViewModel.clearError()
+        }
+    }
+
     // QR Info
     val bankId = "ACB"
     val accountNumber = "39598507"
@@ -46,6 +70,12 @@ fun PaymentScreen(
     val encodedName = URLEncoder.encode(accountName, "UTF-8")
     val qrUrl = "https://img.vietqr.io/image/$bankId-$accountNumber-$template.png" +
             "?amount=$amount&addInfo=$encodedInfo&accountName=$encodedName"
+
+    val sharedState = sharedViewModel.sharedState.collectAsStateWithLifecycle().value
+    val user = sharedState.currentUser
+    val token: String? = sharedState.token
+    val serviceId: String? = sharedState.selectedServiceId
+    val facilityId: String? = sharedState.selectedFacilityId
 
     Scaffold(
         topBar = {
@@ -185,7 +215,25 @@ fun PaymentScreen(
                     Text("Cancel", fontSize = 16.sp)
                 }
                 Button(
-                    onClick = onPay,
+                    onClick = {
+                        val safeToken = token
+                        val safeServiceId = serviceId
+                        val safeFacilityId = facilityId
+                        if (user != null && !safeToken.isNullOrBlank() && !safeServiceId.isNullOrBlank() && !safeFacilityId.isNullOrBlank()) {
+                            val bookingRequest = com.uth.vactrack.data.model.BookingRequest(
+                                userId = user.id,
+                                serviceId = safeServiceId,
+                                facilityId = safeFacilityId,
+                                date = selectedDate,
+                                time = selectedTime,
+                                doseNumber = 1,
+                                notes = null
+                            )
+                            paymentViewModel.bookAppointment(safeToken, bookingRequest) {
+                                // Xử lý kết quả nếu cần
+                            }
+                        }
+                    },
                     modifier = Modifier.weight(2f),
                     colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.primary)
                 ) {
@@ -199,17 +247,4 @@ fun PaymentScreen(
             }
         }
     }
-}
-
-@Preview(showSystemUi = true, showBackground = true)
-@Composable
-fun PaymentScreenPreview() {
-    VacTrackTheme {
-        PaymentScreen(
-            serviceName = "Vaccine Services",
-            selectedDate = "Tuesday, 13 May 2025",
-            selectedTime = "9:00 AM",
-            bill = 100
-        )
-    }
-}
+} 

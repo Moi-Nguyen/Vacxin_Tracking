@@ -1,10 +1,13 @@
 package com.uth.vactrack.ui.UILogin
 
 import androidx.compose.runtime.*
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigation.NavType
 import androidx.navigation.compose.*
 import androidx.navigation.navArgument
 import com.uth.vactrack.ui.UIUser.*
+import com.uth.vactrack.ui.viewmodel.SharedViewModel
+import androidx.lifecycle.viewmodel.compose.viewModel
 import java.net.URLDecoder
 import java.net.URLEncoder
 import java.nio.charset.StandardCharsets
@@ -12,11 +15,10 @@ import java.nio.charset.StandardCharsets
 @Composable
 fun AppNavHost(
     startDestination: String = "login",
-    isDarkTheme: Boolean = false,
-    onToggleTheme: () -> Unit = {}
+    sharedViewModel: SharedViewModel = viewModel()
 ) {
     val navController = rememberNavController()
-    var loginEmail by remember { mutableStateOf("") }
+    val sharedState by sharedViewModel.sharedState.collectAsStateWithLifecycle()
 
     NavHost(navController = navController, startDestination = startDestination) {
 
@@ -73,25 +75,9 @@ fun AppNavHost(
             OtpScreen(
                 email = email,
                 onOtpVerified = { resetToken ->
-                    navController.navigate("confirm_reset?resetToken=$resetToken")
-                },
-                onResend = { navController.popBackStack() },
-                onBack = { navController.popBackStack() }
-            )
-        }
-
-        composable(
-            "confirm_reset?resetToken={resetToken}",
-            arguments = listOf(navArgument("resetToken") {
-                type = NavType.StringType
-                defaultValue = ""
-            })
-        ) { backStackEntry ->
-            val resetToken = backStackEntry.arguments?.getString("resetToken") ?: ""
-            ConfirmResetScreen(
-                onConfirm = {
                     navController.navigate("set_new_password?resetToken=$resetToken")
                 },
+                onResend = { navController.popBackStack() },
                 onBack = { navController.popBackStack() }
             )
         }
@@ -116,24 +102,32 @@ fun AppNavHost(
         }
 
         composable("home") {
-            HomeScreen(navController = navController)
+            HomeScreen(
+                navController = navController,
+                sharedViewModel = sharedViewModel
+            )
         }
 
         composable("main") {
-            MainScreen(navController = navController)
+            MainScreen(
+                navController = navController,
+                sharedViewModel = sharedViewModel
+            )
         }
 
         composable("appointment") {
             AppointmentScreen(
                 navController = navController,
-                onBack = { navController.popBackStack() }
+                onBack = { navController.popBackStack() },
+                sharedViewModel = sharedViewModel
             )
         }
 
         composable("select_service") {
             SelectServiceScreen(
                 navController = navController,
-                onBack = { navController.popBackStack() }
+                onBack = { navController.popBackStack() },
+                sharedViewModel = sharedViewModel
             )
         }
 
@@ -150,7 +144,8 @@ fun AppNavHost(
                 serviceName = serviceName,
                 bill = bill,
                 navController = navController,
-                onBack = { navController.popBackStack() }
+                onBack = { navController.popBackStack() },
+                sharedViewModel = sharedViewModel
             )
         }
 
@@ -193,7 +188,8 @@ fun AppNavHost(
                     val encodedDate = URLEncoder.encode(date, StandardCharsets.UTF_8.toString())
                     val encodedTime = URLEncoder.encode(time, StandardCharsets.UTF_8.toString())
                     navController.navigate("booking_success/$encodedService/$encodedDate/$encodedTime/$bill")
-                }
+                },
+                sharedViewModel = sharedViewModel
             )
         }
 
@@ -229,28 +225,31 @@ fun AppNavHost(
                     navController.navigate("main") {
                         popUpTo("main") { inclusive = true }
                     }
-                }
+                },
+                sharedViewModel = sharedViewModel
             )
         }
 
         composable("profile") {
             ProfileScreen(
                 navController = navController,
-                onBack = { navController.popBackStack() },
-                isDarkTheme = isDarkTheme,
-                onToggleTheme = onToggleTheme
+                sharedViewModel = sharedViewModel
             )
         }
 
         composable("edit_profile") {
             EditProfileScreen(
                 onBack = { navController.popBackStack() },
-                onSubmit = { navController.popBackStack() }
+                onSubmit = { navController.popBackStack() },
+                sharedViewModel = sharedViewModel
             )
         }
 
         composable("tracking_booking") {
-            TrackingBookingScreen(navController = navController)
+            TrackingBookingScreen(
+                navController = navController,
+                sharedViewModel = sharedViewModel
+            )
         }
     }
-}
+} 

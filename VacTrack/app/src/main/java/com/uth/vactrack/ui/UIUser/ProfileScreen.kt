@@ -19,26 +19,31 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.core.app.NotificationManagerCompat
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
 import androidx.navigation.compose.rememberNavController
 import com.uth.vactrack.R
+import com.uth.vactrack.ui.viewmodel.SharedViewModel
+import coil.compose.AsyncImage
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun ProfileScreen(
     navController: NavController = rememberNavController(),
     onBack: () -> Unit = { navController.popBackStack() },
-    isDarkTheme: Boolean = false,
-    onToggleTheme: () -> Unit = {}
+    sharedViewModel: SharedViewModel = viewModel()
 ) {
     val context = LocalContext.current
+    val sharedState by sharedViewModel.sharedState.collectAsStateWithLifecycle()
+    
     val isNotificationEnabled = remember {
         mutableStateOf(NotificationManagerCompat.from(context).areNotificationsEnabled())
     }
+    var menuExpanded by remember { mutableStateOf(false) }
 
     Scaffold(
         topBar = {
@@ -50,8 +55,25 @@ fun ProfileScreen(
                     }
                 },
                 actions = {
-                    IconButton(onClick = { /* Optional menu */ }) {
-                        Icon(Icons.Filled.MoreVert, contentDescription = "Menu")
+                    Box {
+                        IconButton(onClick = { menuExpanded = true }) {
+                            Icon(Icons.Filled.MoreVert, contentDescription = "Menu")
+                        }
+                        DropdownMenu(
+                            expanded = menuExpanded,
+                            onDismissRequest = { menuExpanded = false }
+                        ) {
+                            DropdownMenuItem(
+                                text = { Text("Log out") },
+                                onClick = {
+                                    menuExpanded = false
+                                    sharedViewModel.logout(context)
+                                    navController.navigate("login") {
+                                        popUpTo(0) { inclusive = true }
+                                    }
+                                }
+                            )
+                        }
                     }
                 }
             )
@@ -69,21 +91,41 @@ fun ProfileScreen(
                 horizontalAlignment = Alignment.CenterHorizontally,
                 modifier = Modifier.fillMaxWidth()
             ) {
-                Image(
-                    painter = painterResource(id = R.drawable.ic_avatar),
-                    contentDescription = "Avatar",
-                    modifier = Modifier
-                        .size(100.dp)
-                        .clip(CircleShape)
-                )
+                val user = sharedState.currentUser
+                val avatarUrl = user?.photoUrl
+                if (!avatarUrl.isNullOrBlank()) {
+                    AsyncImage(
+                        model = avatarUrl,
+                        contentDescription = "Avatar",
+                        modifier = Modifier
+                            .size(100.dp)
+                            .clip(CircleShape)
+                    )
+                } else {
+                    Image(
+                        painter = painterResource(id = R.drawable.ic_avatar),
+                        contentDescription = "Avatar",
+                        modifier = Modifier
+                            .size(100.dp)
+                            .clip(CircleShape)
+                    )
+                }
                 Spacer(modifier = Modifier.height(12.dp))
-                Text("Nguyen Van A", fontWeight = FontWeight.Bold, fontSize = 20.sp)
-                Text("nguyenvana@gmail.com | 0315648987", fontSize = 14.sp, color = Color.Gray)
+                Text(
+                    user?.name ?: "User", 
+                    fontWeight = FontWeight.Bold, 
+                    fontSize = 20.sp
+                )
+                Text(
+                    "${user?.email ?: "email@example.com"} | ${user?.phone ?: "0123456789"}", 
+                    fontSize = 14.sp, 
+                    color = Color.Gray
+                )
             }
 
             Spacer(modifier = Modifier.height(24.dp))
 
-            ProfileOptionGroup(
+            ProfileOptionGroupMVVM(
                 options = listOf(
                     Triple("Edit profile information", R.drawable.ic_edit) {
                         navController.navigate("edit_profile")
@@ -113,18 +155,18 @@ fun ProfileScreen(
 
             Spacer(modifier = Modifier.height(16.dp))
 
-            ProfileOptionGroup(
+            ProfileOptionGroupMVVM(
                 options = listOf(
                     Triple("Security", R.drawable.ic_security) {},
-                    Triple("Theme", R.drawable.ic_theme) { onToggleTheme() }
+                    Triple("Theme", R.drawable.ic_theme) { sharedViewModel.toggleTheme() }
                 ),
                 rightContent = listOf(
                     null,
                     {
                         Text(
-                            if (isDarkTheme) "Dark mode" else "Light mode",
+                            if (sharedState.isDarkTheme) "Dark mode" else "Light mode",
                             fontSize = 14.sp,
-                            color = if (isDarkTheme) Color.LightGray else Color.Gray
+                            color = if (sharedState.isDarkTheme) Color.LightGray else Color.Gray
                         )
                     }
                 )
@@ -132,7 +174,7 @@ fun ProfileScreen(
 
             Spacer(modifier = Modifier.height(16.dp))
 
-            ProfileOptionGroup(
+            ProfileOptionGroupMVVM(
                 options = listOf(
                     Triple("Help & Support", R.drawable.ic_help) {},
                     Triple("Contact us", R.drawable.ic_contact) {},
@@ -144,7 +186,7 @@ fun ProfileScreen(
 }
 
 @Composable
-fun ProfileOptionGroup(
+fun ProfileOptionGroupMVVM(
     options: List<Triple<String, Int, () -> Unit>>,
     rightContent: List<@Composable (() -> Unit)?> = List(options.size) { null }
 ) {
@@ -176,10 +218,4 @@ fun ProfileOptionGroup(
             }
         }
     }
-}
-
-@Preview(showBackground = true, showSystemUi = true)
-@Composable
-fun ProfileScreenPreview() {
-    ProfileScreen(isDarkTheme = true, onToggleTheme = {})
-}
+} 

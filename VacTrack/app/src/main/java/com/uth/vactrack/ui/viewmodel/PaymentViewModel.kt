@@ -6,6 +6,9 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
+import com.uth.vactrack.data.model.BookingRequest
+import com.uth.vactrack.data.repository.AppointmentRepository
+import com.uth.vactrack.data.model.BookingResponse
 
 data class PaymentState(
     val selectedPaymentMethod: String = "Credit Card",
@@ -22,6 +25,8 @@ data class PaymentState(
 class PaymentViewModel : ViewModel() {
     private val _state = MutableStateFlow(PaymentState())
     val state: StateFlow<PaymentState> = _state.asStateFlow()
+
+    private val appointmentRepository = AppointmentRepository()
 
     fun updatePaymentMethod(method: String) {
         _state.value = _state.value.copy(selectedPaymentMethod = method)
@@ -86,6 +91,24 @@ class PaymentViewModel : ViewModel() {
                     error = e.message ?: "Thanh toán thất bại",
                     success = false
                 )
+            }
+        }
+    }
+
+    fun bookAppointment(
+        token: String,
+        bookingRequest: BookingRequest,
+        onResult: (BookingResponse?) -> Unit
+    ) {
+        _state.value = _state.value.copy(isLoading = true, error = null, message = null, success = false)
+        viewModelScope.launch {
+            val result = appointmentRepository.bookAppointmentWithApi(token, bookingRequest)
+            result.onSuccess { response ->
+                _state.value = _state.value.copy(isLoading = false, message = response.message, success = response.success)
+                onResult(response)
+            }.onFailure { e ->
+                _state.value = _state.value.copy(isLoading = false, error = e.message ?: "Đặt lịch thất bại", success = false)
+                onResult(null)
             }
         }
     }

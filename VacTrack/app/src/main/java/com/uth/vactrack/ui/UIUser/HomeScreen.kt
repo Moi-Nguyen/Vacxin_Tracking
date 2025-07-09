@@ -16,17 +16,22 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
-import androidx.navigation.compose.rememberNavController
 import com.uth.vactrack.R
+import com.uth.vactrack.ui.viewmodel.HomeViewModel
+import com.uth.vactrack.ui.viewmodel.SharedViewModel
 
 @Composable
 fun HomeScreen(
-    navController: NavController = rememberNavController()
+    navController: NavController,
+    homeViewModel: HomeViewModel = viewModel(),
+    sharedViewModel: SharedViewModel = viewModel()
 ) {
+    val state by homeViewModel.state.collectAsStateWithLifecycle()
     var menuExpanded by remember { mutableStateOf(false) }
 
     Column(
@@ -120,6 +125,7 @@ fun HomeScreen(
                             },
                             onClick = {
                                 menuExpanded = false
+                                sharedViewModel.logout()
                                 navController.navigate("login") {
                                     popUpTo("login") { inclusive = true }
                                 }
@@ -180,10 +186,4 @@ fun HomeScreen(
                 .padding(vertical = 16.dp, horizontal = 16.dp)
         )
     }
-}
-
-@Preview(showBackground = true, showSystemUi = true)
-@Composable
-fun HomeScreenPreview() {
-    HomeScreen()
-}
+} 

@@ -3,32 +3,36 @@ package com.uth.vactrack.ui.UILogin
 import android.widget.Toast
 import androidx.compose.foundation.background
 import androidx.compose.foundation.Image
-import androidx.compose.foundation.border
-import androidx.compose.ui.res.painterResource
+import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.focus.FocusRequester
-import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.TextStyle
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.input.VisualTransformation
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import com.uth.vactrack.config.AppConfig
-import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.launch
-import kotlinx.coroutines.withContext
-import org.json.JSONObject
-import java.net.HttpURLConnection
-import java.net.URL
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import androidx.lifecycle.viewmodel.compose.viewModel
+import com.uth.vactrack.R
+import com.uth.vactrack.ui.viewmodel.OtpViewModel
+import androidx.compose.ui.focus.FocusRequester
+import androidx.compose.ui.focus.focusRequester
+import androidx.compose.ui.platform.LocalFocusManager
+import android.os.Vibrator
+import android.os.VibrationEffect
+import androidx.compose.foundation.border
+import androidx.compose.foundation.text.BasicTextField
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.draw.shadow
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.interaction.collectIsFocusedAsState
 
@@ -37,45 +41,44 @@ fun OtpScreen(
     email: String,
     onOtpVerified: (resetToken: String) -> Unit,
     onResend: () -> Unit,
-    onBack: () -> Unit
+    onBack: () -> Unit,
+    viewModel: OtpViewModel = viewModel()
 ) {
     val context = LocalContext.current
-    var otp by remember { mutableStateOf(List(6) { "" }) }
-    var error by remember { mutableStateOf<String?>(null) }
-    var loading by remember { mutableStateOf(false) }
-    val focusRequesters = List(6) { remember { FocusRequester() } }
+    val state by viewModel.state.collectAsStateWithLifecycle()
     val blue = Color(0xFF1976D2)
+    val otpLength = 6
+    var otpInputs by remember { mutableStateOf(List(otpLength) { "" }) }
+    val focusRequesters = remember { List(otpLength) { FocusRequester() } }
+    val focusManager = LocalFocusManager.current
 
-    fun verifyOtp() {
-        loading = true
-        error = null
-        CoroutineScope(Dispatchers.IO).launch {
-            try {
-                val url = URL("${AppConfig.BASE_URL}/api/auth/verify-otp")
-                val conn = url.openConnection() as HttpURLConnection
-                conn.requestMethod = "POST"
-                conn.setRequestProperty("Content-Type", "application/json")
-                conn.doOutput = true
-                val body = JSONObject().apply {
-                    put("email", email)
-                    put("otp", otp.joinToString(""))
-                }.toString()
-                conn.outputStream.use { it.write(body.toByteArray()) }
-                val response = conn.inputStream.bufferedReader().readText()
-                val json = JSONObject(response)
-                withContext(Dispatchers.Main) {
-                    loading = false
-                    if (conn.responseCode == 200) {
-                        onOtpVerified(json.getString("resetToken"))
-                    } else {
-                        error = json.optString("error", "OTP không hợp lệ")
-                    }
+    // Focus ô đầu tiên khi vào màn hình
+    LaunchedEffect(Unit) {
+        focusRequesters[0].requestFocus()
+    }
+
+    LaunchedEffect(state.error) {
+        state.error?.let {
+            Toast.makeText(context, it, Toast.LENGTH_SHORT).show()
+            // Rung khi sai mã
+            val vibrator = context.getSystemService(android.content.Context.VIBRATOR_SERVICE) as? Vibrator
+            vibrator?.let {
+                if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.O) {
+                    it.vibrate(VibrationEffect.createOneShot(200, VibrationEffect.DEFAULT_AMPLITUDE))
+                } else {
+                    @Suppress("DEPRECATION")
+                    it.vibrate(200)
                 }
-            } catch (e: Exception) {
-                withContext(Dispatchers.Main) {
-                    loading = false
-                    error = e.localizedMessage ?: "Lỗi xác thực OTP"
-                }
+            }
+            viewModel.clearError()
+        }
+    }
+    LaunchedEffect(state.success) {
+        if (state.success) {
+            val token = state.resetToken
+            if (token != null) {
+                onOtpVerified(token)
+                viewModel.resetSuccess()
             }
         }
     }
@@ -98,16 +101,16 @@ fun OtpScreen(
             ) {
                 IconButton(onClick = onBack) {
                     Icon(
-                        painter = painterResource(id = com.uth.vactrack.R.drawable.ic_arrow_back),
+                        painter = painterResource(id = R.drawable.ic_arrow_back),
                         contentDescription = "Back"
                     )
                 }
             }
             Spacer(modifier = Modifier.height(8.dp))
             Image(
-                painter = painterResource(id = com.uth.vactrack.R.drawable.img_logo_xoanen),
+                painter = painterResource(id = R.drawable.img_logo_xoanen),
                 contentDescription = "Logo VacTrack",
-                modifier = Modifier.size(240.dp)
+                modifier = Modifier.size(180.dp)
             )
             Spacer(modifier = Modifier.height(8.dp))
             Text(
@@ -126,15 +129,18 @@ fun OtpScreen(
                 horizontalArrangement = Arrangement.Center,
                 modifier = Modifier.fillMaxWidth()
             ) {
-                otp.forEachIndexed { i, value ->
+                for (i in 0 until otpLength) {
                     val interactionSource = remember { MutableInteractionSource() }
                     val isFocused = interactionSource.collectIsFocusedAsState().value
                     OutlinedTextField(
-                        value = value,
-                        onValueChange = { newValue ->
-                            if (newValue.length <= 1 && newValue.all { it.isDigit() }) {
-                                otp = otp.toMutableList().also { it[i] = newValue }
-                                if (newValue.isNotEmpty() && i < 5) {
+                        value = otpInputs[i],
+                        onValueChange = { newValue: String ->
+                            if (newValue.length <= 1 && (newValue.isEmpty() || newValue.all { c: Char -> c.isDigit() })) {
+                                val newInputs = otpInputs.toMutableList()
+                                newInputs[i] = newValue
+                                otpInputs = newInputs
+                                viewModel.setOtp(otpInputs.joinToString(""))
+                                if (newValue.isNotEmpty() && i < otpLength - 1) {
                                     focusRequesters[i + 1].requestFocus()
                                 }
                                 if (newValue.isEmpty() && i > 0) {
@@ -151,33 +157,30 @@ fun OtpScreen(
                             fontSize = 22.sp,
                             fontWeight = FontWeight.Bold,
                             color = Color.Black,
-                            textAlign = androidx.compose.ui.text.style.TextAlign.Center
+                            textAlign = TextAlign.Center
                         ),
                         singleLine = true,
                         visualTransformation = VisualTransformation.None,
                         interactionSource = interactionSource,
-                        /* keyboardOptions = androidx.compose.ui.text.input.KeyboardOptions(keyboardType = KeyboardType.Number),*/
-                        maxLines = 1
+                        maxLines = 1,
+                        isError = state.error != null
                     )
                     Spacer(modifier = Modifier.width(8.dp))
                 }
             }
-            if (error != null) {
-                Text(error!!, color = Color.Red, fontSize = 14.sp, modifier = Modifier.padding(top = 4.dp))
-            }
             Spacer(modifier = Modifier.height(24.dp))
             Button(
-                onClick = { verifyOtp() },
+                onClick = { viewModel.verifyOtp(email) },
                 modifier = Modifier
                     .fillMaxWidth()
                     .height(48.dp),
                 shape = RoundedCornerShape(16.dp),
-                enabled = otp.all { it.isNotEmpty() } && !loading,
+                enabled = otpInputs.all { it.isNotEmpty() } && !state.isLoading,
                 colors = ButtonDefaults.buttonColors(
-                    containerColor = if (otp.all { it.isNotEmpty() }) blue else blue
+                    containerColor = if (otpInputs.all { it.isNotEmpty() }) blue else blue
                 )
             ) {
-                if (loading) CircularProgressIndicator(color = Color.White, modifier = Modifier.size(20.dp))
+                if (state.isLoading) CircularProgressIndicator(color = Color.White, modifier = Modifier.size(20.dp))
                 else Text("Verify Code", fontWeight = FontWeight.Bold, color = Color.White)
             }
             Spacer(modifier = Modifier.height(12.dp))

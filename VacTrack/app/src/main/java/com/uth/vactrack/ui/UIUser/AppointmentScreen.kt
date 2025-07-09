@@ -13,66 +13,51 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
-import androidx.navigation.compose.rememberNavController
 import com.uth.vactrack.R
-import com.uth.vactrack.ui.theme.VacTrackTheme
+import com.uth.vactrack.ui.viewmodel.AppointmentViewModel
+import com.uth.vactrack.ui.viewmodel.SharedViewModel
+import com.uth.vactrack.ui.UIUser.BottomNavigationBar
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun AppointmentScreen(
-    navController: NavController = rememberNavController(),
-    onBack: () -> Unit = { navController.popBackStack() }
+    navController: NavController,
+    onBack: () -> Unit = { navController.popBackStack() },
+    appointmentViewModel: AppointmentViewModel = viewModel(),
+    sharedViewModel: SharedViewModel = viewModel()
 ) {
-    val name = remember { mutableStateOf("") }
-    val birthday = remember { mutableStateOf("") }
-    val phone = remember { mutableStateOf("") }
-    val insuranceId = remember { mutableStateOf("") }
-
-    val isBirthdayValid = birthday.value.matches(
-        Regex("""^(0[1-9]|[12][0-9]|3[01])/(0[1-9]|1[0-2])/(\d{4})$""")
-    )
-    val isPhoneValid = phone.value.length in 10..12 && phone.value.all { it.isDigit() }
-    val isFormValid = name.value.isNotBlank() &&
-            birthday.value.isNotBlank() && isBirthdayValid &&
-            phone.value.isNotBlank() && isPhoneValid &&
-            insuranceId.value.isNotBlank()
-
+    val state by appointmentViewModel.state.collectAsStateWithLifecycle()
+    val context = LocalContext.current
+    val user = sharedViewModel.sharedState.collectAsStateWithLifecycle().value.currentUser
+    var showDialog by remember { mutableStateOf(false) }
+    var dialogMessage by remember { mutableStateOf("") }
     val appointmentHistory = listOf(1)
+    val sharedState = sharedViewModel.sharedState.collectAsStateWithLifecycle().value
+    val token = sharedState.token
 
     Scaffold(
         topBar = {
             TopAppBar(
                 title = {
-                    Row(verticalAlignment = Alignment.CenterVertically) {
-                        Image(
-                            painter = painterResource(id = R.drawable.img_logo_xoanen),
-                            contentDescription = "VacTrack Logo",
-                            modifier = Modifier
-                                .height(32.dp)
-                                .padding(end = 8.dp)
-                        )
-                        Text("Appointments")
-                    }
+                    Text(
+                        "Appointment",
+                        fontWeight = FontWeight.Bold,
+                        fontSize = 20.sp
+                    )
                 },
                 navigationIcon = {
                     IconButton(onClick = onBack) {
                         Icon(
                             painter = painterResource(id = R.drawable.ic_arrow_back),
                             contentDescription = "Back"
-                        )
-                    }
-                },
-                actions = {
-                    IconButton(onClick = { }) {
-                        Icon(
-                            painter = painterResource(id = R.drawable.ic_info),
-                            contentDescription = "Info"
                         )
                     }
                 }
@@ -101,22 +86,36 @@ fun AppointmentScreen(
             item { SectionTitle("Other:") }
             item {
                 OtherInfoCard(
-                    name = name.value,
-                    onNameChange = { name.value = it },
-                    birthday = birthday.value,
-                    onBirthdayChange = { birthday.value = it },
-                    phone = phone.value,
-                    onPhoneChange = { phone.value = it },
-                    insuranceId = insuranceId.value,
-                    onInsuranceIdChange = { insuranceId.value = it }
+                    name = state.name,
+                    onNameChange = { appointmentViewModel.updateName(it) },
+                    birthday = state.birthday,
+                    onBirthdayChange = { appointmentViewModel.updateBirthday(it) },
+                    phone = state.phone,
+                    onPhoneChange = { appointmentViewModel.updatePhone(it) },
+                    insuranceId = state.insuranceId,
+                    onInsuranceIdChange = { appointmentViewModel.updateInsuranceId(it) }
                 )
             }
 
             item {
                 ContinueButton(
-                    enabled = isFormValid,
+                    enabled = appointmentViewModel.isFormValid(),
                     onClick = {
-                        navController.navigate("select_service")
+                        if (user != null && !token.isNullOrBlank() &&
+                            !sharedState.selectedServiceId.isNullOrBlank() &&
+                            !sharedState.selectedFacilityId.isNullOrBlank()) {
+                            appointmentViewModel.bookAppointment(
+                                token = token,
+                                userId = user.id,
+                                serviceId = sharedState.selectedServiceId!!,
+                                facilityId = sharedState.selectedFacilityId!!,
+                                date = state.birthday, // TODO: lấy ngày từ UI chọn ngày
+                                time = "09:00" // TODO: lấy giờ từ UI chọn giờ
+                            )
+                        } else {
+                            dialogMessage = "Bạn cần đăng nhập và chọn dịch vụ/cơ sở để đặt lịch."
+                            showDialog = true
+                        }
                     }
                 )
             }
@@ -127,6 +126,31 @@ fun AppointmentScreen(
             }
             item { Spacer(modifier = Modifier.height(80.dp)) }
         }
+    }
+    if (state.message != null) {
+        dialogMessage = state.message ?: ""
+        showDialog = true
+        appointmentViewModel.clearMessage()
+    }
+    if (state.error != null) {
+        dialogMessage = state.error ?: ""
+        showDialog = true
+        appointmentViewModel.clearError()
+    }
+    if (showDialog) {
+        AlertDialog(
+            onDismissRequest = { showDialog = false },
+            confirmButton = {
+                TextButton(onClick = {
+                    showDialog = false
+                    if (state.message != null) {
+                        navController.navigate("booking_success/service1/2024-07-01/09:00/500000")
+                    }
+                }) { Text("OK") }
+            },
+            title = { Text("Thông báo") },
+            text = { Text(dialogMessage) }
+        )
     }
 }
 
@@ -141,9 +165,6 @@ fun OtherInfoCard(
     insuranceId: String,
     onInsuranceIdChange: (String) -> Unit
 ) {
-    val birthdayValid = birthday.matches(Regex("""^(0[1-9]|[12][0-9]|3[01])/(0[1-9]|1[0-2])/(\d{4})$"""))
-    val phoneValid = phone.length in 10..12 && phone.all { it.isDigit() }
-
     Card(
         modifier = Modifier
             .fillMaxWidth()
@@ -151,90 +172,74 @@ fun OtherInfoCard(
         shape = RoundedCornerShape(12.dp),
         colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant)
     ) {
-        Column(modifier = Modifier.padding(16.dp)) {
+        Column(
+            modifier = Modifier.padding(16.dp),
+            verticalArrangement = Arrangement.spacedBy(12.dp)
+        ) {
             OutlinedTextField(
                 value = name,
                 onValueChange = onNameChange,
-                label = { Text("Name") },
-                modifier = Modifier.fillMaxWidth(),
-                singleLine = true
+                label = { Text("Full Name") },
+                modifier = Modifier.fillMaxWidth()
             )
-            Spacer(modifier = Modifier.height(8.dp))
 
             OutlinedTextField(
                 value = birthday,
                 onValueChange = onBirthdayChange,
-                label = { Text("Birthday (dd/MM/yyyy)") },
-                isError = birthday.isNotBlank() && !birthdayValid,
-                supportingText = {
-                    if (birthday.isNotBlank() && !birthdayValid) {
-                        Text(
-                            "Invalid format. Use dd/MM/yyyy",
-                            color = MaterialTheme.colorScheme.error,
-                            fontSize = 12.sp
-                        )
-                    }
-                },
-                modifier = Modifier.fillMaxWidth(),
-                singleLine = true
+                label = { Text("Birthday (DD/MM/YYYY)") },
+                modifier = Modifier.fillMaxWidth()
             )
-            Spacer(modifier = Modifier.height(8.dp))
 
             OutlinedTextField(
                 value = phone,
                 onValueChange = onPhoneChange,
-                label = { Text("Phone") },
-                isError = phone.isNotBlank() && !phoneValid,
-                supportingText = {
-                    if (phone.isNotBlank() && !phoneValid) {
-                        Text(
-                            "Phone must be 10–12 digits",
-                            color = MaterialTheme.colorScheme.error,
-                            fontSize = 12.sp
-                        )
-                    }
-                },
-                modifier = Modifier.fillMaxWidth(),
-                singleLine = true
+                label = { Text("Phone Number") },
+                modifier = Modifier.fillMaxWidth()
             )
-            Spacer(modifier = Modifier.height(8.dp))
 
             OutlinedTextField(
                 value = insuranceId,
                 onValueChange = onInsuranceIdChange,
-                label = { Text("Health Insurance ID") },
-                modifier = Modifier.fillMaxWidth(),
-                singleLine = true
+                label = { Text("Insurance ID") },
+                modifier = Modifier.fillMaxWidth()
             )
         }
     }
 }
 
 @Composable
+fun SectionTitle(title: String) {
+    Text(
+        title,
+        fontSize = 18.sp,
+        fontWeight = FontWeight.Bold,
+        modifier = Modifier.padding(vertical = 8.dp)
+    )
+}
+
+@Composable
 fun AppointmentCard() {
     Card(
+        modifier = Modifier
+            .fillMaxWidth()
+            .shadow(4.dp, RoundedCornerShape(12.dp)),
         shape = RoundedCornerShape(12.dp),
-        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
-        elevation = CardDefaults.cardElevation(2.dp),
-        modifier = Modifier.fillMaxWidth()
+        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant)
     ) {
-        Row(
-            modifier = Modifier.padding(12.dp),
-            verticalAlignment = Alignment.CenterVertically
+        Column(
+            modifier = Modifier.padding(16.dp)
         ) {
-            Image(
-                painter = painterResource(id = R.drawable.ic_avatar),
-                contentDescription = "Avatar",
-                modifier = Modifier
-                    .size(48.dp)
-                    .clip(CircleShape)
+            Text(
+                "Vaccination Service",
+                fontSize = 18.sp,
+                fontWeight = FontWeight.Bold,
+                color = MaterialTheme.colorScheme.onSurface
             )
-            Spacer(modifier = Modifier.width(12.dp))
-            Text("Nguyen Van A", fontWeight = FontWeight.Bold, modifier = Modifier.weight(1f), color = MaterialTheme.colorScheme.onSurface)
-            Icon(
-                painter = painterResource(id = R.drawable.ic_arrow_dropdown),
-                contentDescription = "Dropdown",
-                tint = MaterialTheme.colorScheme.onSurface
+            Spacer(modifier = Modifier.height(8.dp))
+            Text(
+                "Select your preferred vaccination service",
+                fontSize = 14.sp,
+                color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.7f)
             )
         }
     }
@@ -244,106 +249,58 @@ fun AppointmentCard() {
 fun AppointmentButton(onClick: () -> Unit) {
     Button(
         onClick = onClick,
-        modifier = Modifier
-            .fillMaxWidth()
-            .height(44.dp),
-        shape = RoundedCornerShape(24.dp),
+        modifier = Modifier.fillMaxWidth(),
+        shape = RoundedCornerShape(12.dp),
         colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.primary)
     ) {
-        Text("Book for an appointment")
-        Spacer(modifier = Modifier.width(8.dp))
-        Icon(
-            painter = painterResource(id = R.drawable.ic_arrow_move),
-            contentDescription = "Next"
-        )
+        Text("Select Service", fontSize = 16.sp, color = MaterialTheme.colorScheme.onPrimary)
     }
 }
 
 @Composable
-fun ContinueButton(enabled: Boolean = true, onClick: () -> Unit) {
-    Box(modifier = Modifier.fillMaxWidth()) {
-        Button(
-            onClick = onClick,
-            enabled = enabled,
-            modifier = Modifier
-                .align(Alignment.Center)
-                .height(40.dp)
-                .width(120.dp),
-            shape = RoundedCornerShape(20.dp),
-            colors = ButtonDefaults.buttonColors(
-                containerColor = if (enabled) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.surfaceVariant
-            )
-        ) {
-            Icon(
-                painter = painterResource(id = R.drawable.ic_arrow_move),
-                contentDescription = "Continue"
-            )
-        }
+fun ContinueButton(enabled: Boolean, onClick: () -> Unit) {
+    Button(
+        onClick = onClick,
+        enabled = enabled,
+        modifier = Modifier.fillMaxWidth(),
+        shape = RoundedCornerShape(12.dp),
+        colors = ButtonDefaults.buttonColors(
+            containerColor = if (enabled) MaterialTheme.colorScheme.primary else Color.Gray
+        )
+    ) {
+        Text("Continue", fontSize = 16.sp, color = MaterialTheme.colorScheme.onPrimary)
     }
 }
 
 @Composable
 fun AppointmentHistoryCard() {
     Card(
+        modifier = Modifier
+            .fillMaxWidth()
+            .shadow(4.dp, RoundedCornerShape(12.dp)),
         shape = RoundedCornerShape(12.dp),
-        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
-        elevation = CardDefaults.cardElevation(2.dp),
-        modifier = Modifier.fillMaxWidth()
+        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant)
     ) {
-        Column(modifier = Modifier.padding(16.dp)) {
-            Row(verticalAlignment = Alignment.CenterVertically) {
-                Box(
-                    modifier = Modifier
-                        .size(36.dp)
-                        .background(MaterialTheme.colorScheme.primary, CircleShape),
-                    contentAlignment = Alignment.Center
-                ) {
-                    Text("GM", color = Color.White, fontWeight = FontWeight.Bold)
-                }
-                Spacer(modifier = Modifier.width(12.dp))
-                Column(modifier = Modifier.weight(1f)) {
-                    Text("Gia Dinh Hospital", fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.onSurface)
-                    Text("Vaccine Advice", fontSize = 12.sp, color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.7f))
-                }
-                Icon(
-                    painter = painterResource(id = R.drawable.ic_location),
-                    contentDescription = "Location",
-                    tint = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f),
-                    modifier = Modifier.size(20.dp)
-                )
-            }
-
+        Column(
+            modifier = Modifier.padding(16.dp)
+        ) {
+            Text(
+                "Previous Appointment",
+                fontSize = 16.sp,
+                fontWeight = FontWeight.Bold,
+                color = MaterialTheme.colorScheme.onSurface
+            )
             Spacer(modifier = Modifier.height(8.dp))
-
-            Row(verticalAlignment = Alignment.CenterVertically) {
-                Icon(
-                    painter = painterResource(id = R.drawable.ic_calendar),
-                    contentDescription = "Calendar",
-                    tint = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f),
-                    modifier = Modifier.size(16.dp)
-                )
-                Spacer(modifier = Modifier.width(4.dp))
-                Text("05/05/2025", fontSize = 12.sp, color = MaterialTheme.colorScheme.onSurface)
-
-                Spacer(modifier = Modifier.width(12.dp))
-
-                Icon(
-                    painter = painterResource(id = R.drawable.ic_clock),
-                    contentDescription = "Clock",
-                    tint = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f),
-                    modifier = Modifier.size(16.dp)
-                )
-                Spacer(modifier = Modifier.width(4.dp))
-                Text("1:00 PM", fontSize = 12.sp, color = MaterialTheme.colorScheme.onSurface)
-            }
+            Text(
+                "COVID-19 Vaccine - Gia Dinh Hospital",
+                fontSize = 14.sp,
+                color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.7f)
+            )
+            Text(
+                "Completed on March 15, 2024",
+                fontSize = 12.sp,
+                color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.5f)
+            )
         }
     }
-}
-
-@Preview(showBackground = true, showSystemUi = true)
-@Composable
-fun AppointmentScreenPreview() {
-    VacTrackTheme {
-        AppointmentScreen()
-    }
-}
+} 

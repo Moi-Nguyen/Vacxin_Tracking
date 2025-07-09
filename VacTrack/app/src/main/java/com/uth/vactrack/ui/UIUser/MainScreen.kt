@@ -4,104 +4,146 @@ import android.content.Intent
 import android.net.Uri
 import androidx.compose.foundation.*
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material3.*
-import androidx.compose.runtime.Composable
+import androidx.compose.material3.NavigationBar
+import androidx.compose.material3.NavigationBarItem
+import androidx.compose.runtime.*
+import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
-import androidx.navigation.compose.rememberNavController
 import com.uth.vactrack.R
+import com.uth.vactrack.ui.viewmodel.SharedViewModel
+import com.uth.vactrack.ui.viewmodel.MainViewModel
 
 @Composable
-fun BottomNavigationBar(
-    selectedIndex: Int = 0,
-    onRecordClick: () -> Unit = {}
+fun BottomNavigationBarMVVM(
+    selectedIndex: Int,
+    onTabSelected: (Int) -> Unit,
+    onFabClick: () -> Unit
 ) {
-    val icons = listOf(
-        R.drawable.ic_home,
-        R.drawable.ic_record,
-        R.drawable.ic_log,
-        R.drawable.ic_user
+    // Định nghĩa tab cho dễ quản lý
+    val tabs = listOf(
+        Triple("Home", R.drawable.ic_home, 0),
+        Triple("Record", R.drawable.ic_record, 1),
+        Triple("Log", R.drawable.ic_log, 2),
+        Triple("Profile", R.drawable.ic_user, 3)
     )
-    val items = listOf("Home", "Record", "Log", "Profile")
-
-    Box(modifier = Modifier.height(80.dp)) {
-        Row(
+    Box {
+        // Thanh điều hướng bo góc, nổi
+        NavigationBar(
+            containerColor = MaterialTheme.colorScheme.surface,
+            tonalElevation = 8.dp,
             modifier = Modifier
-                .fillMaxWidth()
-                .align(Alignment.BottomCenter)
-                .background(MaterialTheme.colorScheme.background)
-                .padding(horizontal = 5.dp, vertical = 2.dp),
-            horizontalArrangement = Arrangement.SpaceAround,
-            verticalAlignment = Alignment.CenterVertically
+                .height(72.dp)
+                .clip(RoundedCornerShape(topStart = 24.dp, topEnd = 24.dp))
+                .shadow(8.dp)
         ) {
-            icons.forEachIndexed { index, icon ->
-                Column(
-                    horizontalAlignment = Alignment.CenterHorizontally,
-                    modifier = Modifier.clickable {
-                        if (items[index] == "Record") onRecordClick()
-                    }
-                ) {
-                    Icon(
-                        painter = painterResource(id = icon),
-                        contentDescription = items[index],
-                        tint = if (index == selectedIndex) MaterialTheme.colorScheme.primary else Color.Gray,
-                        modifier = Modifier
-                            .size(28.dp)
-                            .background(
-                                if (index == selectedIndex) MaterialTheme.colorScheme.primary.copy(alpha = 0.1f) else Color.Transparent,
-                                shape = CircleShape
-                            )
-                            .padding(4.dp)
-                    )
-                    Text(
-                        text = items[index],
-                        fontSize = 14.sp,
-                        color = if (index == selectedIndex) MaterialTheme.colorScheme.primary else Color.Gray
-                    )
-                }
+            tabs.take(2).forEach { (label, icon, idx) ->
+                NavigationBarItem(
+                    icon = {
+                        Icon(
+                            painterResource(id = icon),
+                            contentDescription = label,
+                            tint = if (selectedIndex == idx) MaterialTheme.colorScheme.primary else Color.Gray,
+                            modifier = Modifier.size(28.dp)
+                        )
+                    },
+                    label = {
+                        if (selectedIndex == idx) Text(label, fontSize = 12.sp)
+                    },
+                    selected = selectedIndex == idx,
+                    onClick = { onTabSelected(idx) },
+                    alwaysShowLabel = false
+                )
+            }
+            Spacer(Modifier.weight(1f, true)) // Chừa chỗ cho FAB
+            tabs.drop(2).forEach { (label, icon, idx) ->
+                NavigationBarItem(
+                    icon = {
+                        Icon(
+                            painterResource(id = icon),
+                            contentDescription = label,
+                            tint = if (selectedIndex == idx) MaterialTheme.colorScheme.primary else Color.Gray,
+                            modifier = Modifier.size(28.dp)
+                        )
+                    },
+                    label = {
+                        if (selectedIndex == idx) Text(label, fontSize = 12.sp)
+                    },
+                    selected = selectedIndex == idx,
+                    onClick = { onTabSelected(idx) },
+                    alwaysShowLabel = false
+                )
             }
         }
-
-        FloatingActionButton(
-            onClick = onRecordClick,
-            containerColor = MaterialTheme.colorScheme.primary,
-            contentColor = Color.White,
-            shape = CircleShape,
+        // FAB nổi bật ở giữa
+        Box(
             modifier = Modifier
-                .align(Alignment.TopCenter)
-                .offset(y = (-28).dp)
-                .size(56.dp),
-            elevation = FloatingActionButtonDefaults.elevation(8.dp)
+                .fillMaxWidth()
+                .height(72.dp),
+            contentAlignment = Alignment.TopCenter
         ) {
-            Icon(Icons.Default.Add, contentDescription = "Add")
+            FloatingActionButton(
+                onClick = onFabClick,
+                containerColor = MaterialTheme.colorScheme.primary,
+                contentColor = Color.White,
+                shape = CircleShape,
+                elevation = FloatingActionButtonDefaults.elevation(12.dp),
+                modifier = Modifier
+                    .offset(y = (-32).dp)
+                    .size(68.dp)
+            ) {
+                Icon(Icons.Default.Add, contentDescription = "Add", modifier = Modifier.size(36.dp))
+            }
         }
     }
 }
 
 @Composable
-fun MainScreen(navController: NavController) {
+fun MainScreen(
+    navController: NavController,
+    sharedViewModel: SharedViewModel = viewModel(),
+    mainViewModel: MainViewModel = viewModel()
+) {
     val context = LocalContext.current
+    val sharedState by sharedViewModel.sharedState.collectAsStateWithLifecycle()
+    val mainState by mainViewModel.state.collectAsStateWithLifecycle()
+    var selectedTab by remember { mutableStateOf(0) }
 
     Scaffold(
         bottomBar = {
-            BottomNavigationBar(
-                selectedIndex = 0,
-                onRecordClick = { navController.navigate("appointment") }
+            BottomNavigationBarMVVM(
+                selectedIndex = selectedTab,
+                onTabSelected = { idx ->
+                    selectedTab = idx
+                    when (idx) {
+                        0 -> navController.navigate("main")
+                        1 -> navController.navigate("appointment")
+                        2 -> {/* TODO: navController.navigate("log") */}
+                        3 -> navController.navigate("profile")
+                    }
+                },
+                onFabClick = { navController.navigate("appointment") }
             )
         }
     ) { innerPadding ->
@@ -131,7 +173,7 @@ fun MainScreen(navController: NavController) {
                     modifier = Modifier
                         .size(48.dp)
                         .clip(CircleShape)
-                        .clickable { navController.navigate("profile") }
+                        .clickable { selectedTab = 3; navController.navigate("profile") }
                 )
             }
 
@@ -198,7 +240,7 @@ fun MainScreen(navController: NavController) {
                             painter = painterResource(id = R.drawable.ic_arrow_move),
                             contentDescription = "Go",
                             tint = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f),
-                            modifier = Modifier.size(20.dp)
+                            modifier = Modifier.size(24.dp)
                         )
                     }
                 }
@@ -292,45 +334,36 @@ fun MainScreen(navController: NavController) {
                         horizontalAlignment = Alignment.CenterHorizontally,
                         modifier = Modifier.clickable {
                             when (label) {
-                                "Vaccination" -> navController.navigate("appointment")
-                                "Screening" -> {
-                                    val browserIntent = Intent(Intent.ACTION_VIEW, Uri.parse("https://vnvc.vn/"))
-                                    context.startActivity(browserIntent)
-                                }
+                                "Vaccination" -> navController.navigate("select_service")
+                                "Screening" -> navController.navigate("select_service")
                                 "Tracking" -> navController.navigate("tracking_booking")
-                                "Consultation" -> {
-                                    val fbIntent = Intent(Intent.ACTION_VIEW, Uri.parse("https://www.facebook.com/trungtamtiemchungvnvc"))
-                                    context.startActivity(fbIntent)
-                                }
+                                "Consultation" -> navController.navigate("select_service")
                             }
                         }
                     ) {
-                        Card(
-                            shape = CircleShape,
-                            colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant),
-                            modifier = Modifier.size(64.dp),
-                            elevation = CardDefaults.cardElevation(2.dp)
+                        Box(
+                            modifier = Modifier
+                                .size(60.dp)
+                                .background(MaterialTheme.colorScheme.surfaceVariant, CircleShape),
+                            contentAlignment = Alignment.Center
                         ) {
-                            Box(contentAlignment = Alignment.Center, modifier = Modifier.fillMaxSize()) {
-                                Icon(
-                                    painter = painterResource(id = icon),
-                                    contentDescription = label,
-                                    tint = Color.Unspecified,
-                                    modifier = Modifier.size(32.dp)
-                                )
-                            }
+                            Icon(
+                                painter = painterResource(id = icon),
+                                contentDescription = label,
+                                tint = MaterialTheme.colorScheme.primary,
+                                modifier = Modifier.size(30.dp)
+                            )
                         }
-                        Spacer(modifier = Modifier.height(4.dp))
-                        Text(label, fontSize = 14.sp, color = MaterialTheme.colorScheme.onSurface)
+                        Spacer(modifier = Modifier.height(8.dp))
+                        Text(
+                            label,
+                            fontSize = 12.sp,
+                            fontWeight = FontWeight.Medium,
+                            color = MaterialTheme.colorScheme.onBackground
+                        )
                     }
                 }
             }
         }
     }
-}
-
-@Preview(showBackground = true, showSystemUi = true)
-@Composable
-fun MainScreenPreview() {
-    MainScreen(navController = rememberNavController())
-}
+} 

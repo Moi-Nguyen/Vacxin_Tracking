@@ -1,12 +1,18 @@
 package com.uth.vactrack.ui.UILogin
 
+import android.app.Activity
+import android.content.Context
 import android.widget.Toast
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.text.KeyboardActions
+import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -14,7 +20,6 @@ import androidx.compose.ui.ExperimentalComposeUiApi
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.focus.focusRequester
-import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalFocusManager
@@ -28,48 +33,44 @@ import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.text.input.VisualTransformation
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import com.uth.vactrack.R
-import com.uth.vactrack.config.AppConfig
-import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.launch
-import kotlinx.coroutines.withContext
-import org.json.JSONObject
-import java.net.HttpURLConnection
-import java.net.URL
-import androidx.activity.compose.rememberLauncherForActivityResult
-import androidx.activity.result.contract.ActivityResultContracts
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import androidx.lifecycle.viewmodel.compose.viewModel
+import com.facebook.CallbackManager
+import com.facebook.FacebookCallback
+import com.facebook.FacebookException
+import com.facebook.login.LoginManager
+import com.facebook.login.LoginResult
 import com.google.android.gms.auth.api.signin.GoogleSignIn
 import com.google.android.gms.auth.api.signin.GoogleSignInOptions
 import com.google.android.gms.common.api.ApiException
-import com.facebook.login.LoginManager
-import com.facebook.login.LoginResult
-import com.facebook.FacebookCallback
-import com.facebook.FacebookException
-import com.facebook.CallbackManager
-import android.app.Activity
-import android.content.Context
+import com.google.firebase.auth.FacebookAuthProvider
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.auth.GoogleAuthProvider
-import com.google.firebase.auth.FacebookAuthProvider
-import com.google.android.gms.auth.api.signin.GoogleSignInClient
+import com.uth.vactrack.R
+import com.uth.vactrack.ui.viewmodel.AuthViewModel
+import com.uth.vactrack.ui.viewmodel.SharedViewModel
+import androidx.compose.foundation.isSystemInDarkTheme
 
 @OptIn(ExperimentalComposeUiApi::class)
 @Composable
 fun LoginScreen(
-    onLoginSuccess: (String) -> Unit = {},
+    onLoginSuccess: () -> Unit = {},
     onSignUpClick: () -> Unit = {},
-    onForgotPassword: (String) -> Unit = {}
+    onForgotPassword: (String) -> Unit = {},
+    authViewModel: AuthViewModel = viewModel(),
+    sharedViewModel: SharedViewModel = viewModel()
 ) {
     val context = LocalContext.current
     val focusManager = LocalFocusManager.current
     val keyboardController = LocalSoftwareKeyboardController.current
     val emailFocusRequester = remember { FocusRequester() }
+    
     var email by remember { mutableStateOf("") }
     var password by remember { mutableStateOf("") }
     var passwordVisible by remember { mutableStateOf(false) }
-    var loading by remember { mutableStateOf(false) }
-    var error by remember { mutableStateOf<String?>(null) }
+    
+    val authState by authViewModel.authState.collectAsStateWithLifecycle()
+    val sharedState by sharedViewModel.sharedState.collectAsStateWithLifecycle()
 
     // Google Sign-In setup
     val googleClientId = stringResource(id = R.string.google_client_id)
@@ -88,44 +89,28 @@ fun LoginScreen(
                 val account = task.getResult(ApiException::class.java)
                 val idToken = account.idToken
                 if (idToken != null) {
-                    val credential = GoogleAuthProvider.getCredential(idToken, null)
-                    FirebaseAuth.getInstance().signInWithCredential(credential)
-                        .addOnCompleteListener { task ->
-                            if (task.isSuccessful) {
-                                val user = FirebaseAuth.getInstance().currentUser
-                                onLoginSuccess(user?.uid ?: "")
-                                Toast.makeText(context, "Đăng nhập Google thành công!", Toast.LENGTH_SHORT).show()
-                            } else {
-                                error = task.exception?.localizedMessage ?: "Google login thất bại"
-                            }
-                        }
-                } else {
-                    error = "Không nhận được ID token từ Google"
+                    authViewModel.loginWithGoogle(idToken.toString())
                 }
             } catch (e: ApiException) {
-                error = e.localizedMessage ?: "Google login thất bại"
+                // Handle error
             }
-        } else {
-            error = "Đăng nhập Google bị hủy"
-        }
-    }
-
-    fun handleGoogleLogin() {
-        try {
-            // Sign out from Google before showing account picker
-            googleSignInClient.signOut().addOnCompleteListener {
-                googleLauncher.launch(googleSignInClient.signInIntent)
-            }
-        } catch (e: Exception) {
-            error = "Lỗi khởi tạo đăng nhập Google: ${e.message}"
         }
     }
 
     // Facebook Login setup
     val callbackManager = remember { CallbackManager.Factory.create() }
     
+    fun handleGoogleLogin() {
+        try {
+            googleSignInClient.signOut().addOnCompleteListener {
+                googleLauncher.launch(googleSignInClient.signInIntent)
+            }
+        } catch (e: Exception) {
+            // Handle error
+        }
+    }
+
     fun handleFacebookLogin() {
-        // Sign out from Facebook before showing login dialog
         LoginManager.getInstance().logOut()
         
         LoginManager.getInstance().registerCallback(callbackManager, object : FacebookCallback<LoginResult> {
@@ -135,10 +120,16 @@ fun LoginScreen(
                     .addOnCompleteListener { task ->
                         if (task.isSuccessful) {
                             val user = FirebaseAuth.getInstance().currentUser
-                            onLoginSuccess(user?.uid ?: "")
-                            Toast.makeText(context, "Đăng nhập Facebook thành công!", Toast.LENGTH_SHORT).show()
-                        } else {
-                            error = task.exception?.localizedMessage ?: "Facebook login thất bại"
+                            if (user != null) {
+                                val userModel = com.uth.vactrack.data.model.User(
+                                    id = user.uid,
+                                    email = user.email ?: "",
+                                    name = user.displayName ?: "",
+                                    phone = user.phoneNumber ?: ""
+                                )
+                                sharedViewModel.setCurrentUser(userModel)
+                                onLoginSuccess()
+                            }
                         }
                     }
             }
@@ -158,49 +149,39 @@ fun LoginScreen(
     // Validate
     val isEmailValid = android.util.Patterns.EMAIL_ADDRESS.matcher(email).matches()
     val isPasswordValid = password.length >= 6
-    val canLogin = isEmailValid && isPasswordValid && !loading
+    val canLogin = isEmailValid && isPasswordValid && !authState.isLoading
 
     LaunchedEffect(Unit) {
         emailFocusRequester.requestFocus()
     }
 
-    fun showToast(msg: String) {
-        Toast.makeText(context, msg, Toast.LENGTH_SHORT).show()
+    LaunchedEffect(authState) {
+        if (authState.isLoggedIn && authState.user != null) {
+            sharedViewModel.setCurrentUser(authState.user!!)
+            val token = authState.token
+            if (!token.isNullOrBlank()) {
+                sharedViewModel.setToken(token)
+            }
+            onLoginSuccess()
+        }
+    }
+
+    LaunchedEffect(authState.error) {
+        authState.error?.let { error ->
+            Toast.makeText(context, error, Toast.LENGTH_SHORT).show()
+            authViewModel.clearError()
+        }
+    }
+
+    LaunchedEffect(authState.message) {
+        authState.message?.let { message ->
+            Toast.makeText(context, message, Toast.LENGTH_SHORT).show()
+            authViewModel.clearMessage()
+        }
     }
 
     fun login() {
-        loading = true
-        error = null
-        CoroutineScope(Dispatchers.IO).launch {
-            try {
-                val url = URL("${AppConfig.BASE_URL}/api/auth/login")
-                val conn = url.openConnection() as HttpURLConnection
-                conn.requestMethod = "POST"
-                conn.setRequestProperty("Content-Type", "application/json")
-                conn.doOutput = true
-                val body = JSONObject().apply {
-                    put("email", email)
-                    put("password", password)
-                }.toString()
-                conn.outputStream.use { it.write(body.toByteArray()) }
-                val response = conn.inputStream.bufferedReader().readText()
-                val json = JSONObject(response)
-                withContext(Dispatchers.Main) {
-                    loading = false
-                    if (conn.responseCode == 200) {
-                        onLoginSuccess(json.getString("token"))
-                        showToast(json.getString("message"))
-                    } else {
-                        error = json.optString("message", "Login failed")
-                    }
-                }
-            } catch (e: Exception) {
-                withContext(Dispatchers.Main) {
-                    loading = false
-                    error = e.localizedMessage ?: "Login failed"
-                }
-            }
-        }
+        authViewModel.login(email, password)
     }
 
     val blue = Color(0xFF1976D2)
@@ -217,7 +198,6 @@ fun LoginScreen(
         Column(
             modifier = Modifier
                 .fillMaxWidth()
-                //.align(Alignment.Center) chưa cần thiết
                 .padding(horizontal = 24.dp),
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
@@ -246,7 +226,7 @@ fun LoginScreen(
             ) {
                 Button(
                     onClick = { handleGoogleLogin() },
-                    colors = ButtonDefaults.buttonColors(containerColor =  Color.White),
+                    colors = ButtonDefaults.buttonColors(containerColor = Color.White),
                     modifier = Modifier.weight(1f).height(48.dp),
                     shape = RoundedCornerShape(14.dp),
                     elevation = ButtonDefaults.buttonElevation(4.dp)
@@ -287,10 +267,7 @@ fun LoginScreen(
             Spacer(modifier = Modifier.height(20.dp))
             OutlinedTextField(
                 value = email,
-                onValueChange = {
-                    email = it
-                    if (error != null) error = null
-                },
+                onValueChange = { email = it },
                 label = { Text("Email") },
                 singleLine = true,
                 isError = email.isNotBlank() && !isEmailValid,
@@ -305,14 +282,13 @@ fun LoginScreen(
                     focusedLabelColor = blue,
                     unfocusedLabelColor = Color.Black
                 ),
+                keyboardOptions = KeyboardOptions(imeAction = ImeAction.Next),
+                keyboardActions = KeyboardActions(onNext = { focusManager.moveFocus(androidx.compose.ui.focus.FocusDirection.Down) })
             )
             Spacer(modifier = Modifier.height(14.dp))
             OutlinedTextField(
                 value = password,
-                onValueChange = {
-                    password = it
-                    if (error != null) error = null
-                },
+                onValueChange = { password = it },
                 label = { Text("Password") },
                 singleLine = true,
                 isError = password.isNotBlank() && !isPasswordValid,
@@ -325,9 +301,7 @@ fun LoginScreen(
                         modifier = Modifier.clickable { passwordVisible = !passwordVisible }
                     )
                 },
-                modifier = Modifier
-                    .fillMaxWidth(),
-                    //.background(Color(0xFFF5F7FB), RoundedCornerShape(14.dp)),
+                modifier = Modifier.fillMaxWidth(),
                 shape = RoundedCornerShape(14.dp),
                 colors = OutlinedTextFieldDefaults.colors(
                     focusedBorderColor = blue,
@@ -336,6 +310,11 @@ fun LoginScreen(
                     focusedLabelColor = blue,
                     unfocusedLabelColor = Color.Black
                 ),
+                keyboardOptions = KeyboardOptions(imeAction = ImeAction.Done),
+                keyboardActions = KeyboardActions(onDone = { 
+                    keyboardController?.hide()
+                    focusManager.clearFocus()
+                })
             )
             Row(
                 modifier = Modifier.fillMaxWidth(),
@@ -344,9 +323,6 @@ fun LoginScreen(
                 TextButton(onClick = { onForgotPassword(email) }) {
                     Text("Forget Password?", color = blue, fontSize = 13.sp)
                 }
-            }
-            if (error != null) {
-                Text(error!!, color = Color.Red, fontSize = 14.sp, modifier = Modifier.padding(top = 4.dp))
             }
             Spacer(modifier = Modifier.height(8.dp))
             Button(
@@ -361,7 +337,7 @@ fun LoginScreen(
                 ),
                 elevation = ButtonDefaults.buttonElevation(6.dp)
             ) {
-                if (loading) CircularProgressIndicator(color = Color.White, modifier = Modifier.size(22.dp))
+                if (authState.isLoading) CircularProgressIndicator(color = Color.White, modifier = Modifier.size(22.dp))
                 else Text("Log In", fontSize = 18.sp, fontWeight = FontWeight.Bold)
             }
             Spacer(modifier = Modifier.height(16.dp))
@@ -383,4 +359,4 @@ fun LoginScreen(
     }
 }
 
-
+ 

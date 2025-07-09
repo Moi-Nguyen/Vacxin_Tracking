@@ -5,7 +5,7 @@ import android.content.Intent
 import android.os.Handler
 import android.os.Looper
 import com.google.firebase.auth.FirebaseAuth
-import com.uth.vactrack.ui.UILogin.LoginActivity
+import com.uth.vactrack.MainActivity
 
 class SessionManager(private val context: Context) {
     private val SESSION_TIMEOUT = 30 * 60 * 1000 // 30 minutes in milliseconds
@@ -22,8 +22,9 @@ class SessionManager(private val context: Context) {
             FirebaseAuth.getInstance().signOut()
             
             // Navigate to login screen
-            val intent = Intent(context, LoginActivity::class.java).apply {
+            val intent = Intent(context, MainActivity::class.java).apply {
                 flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK
+                putExtra("navigateTo", "login")
             }
             context.startActivity(intent)
         }

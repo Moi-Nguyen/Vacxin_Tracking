@@ -8,7 +8,7 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.*
-import androidx.compose.runtime.Composable
+import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -16,11 +16,13 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import androidx.lifecycle.viewmodel.compose.viewModel
 import com.uth.vactrack.R
-import com.uth.vactrack.ui.theme.VacTrackTheme
+import com.uth.vactrack.ui.viewmodel.BookingSuccessViewModel
+import com.uth.vactrack.ui.viewmodel.SharedViewModel
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -30,172 +32,185 @@ fun BookingSuccessScreen(
     selectedTime: String,
     bill: Int = 0,
     onBack: () -> Unit = {},
-    onFinish: () -> Unit = {}
+    onFinish: () -> Unit = {},
+    bookingSuccessViewModel: BookingSuccessViewModel = viewModel(),
+    sharedViewModel: SharedViewModel = viewModel()
 ) {
+    val state by bookingSuccessViewModel.state.collectAsStateWithLifecycle()
+
     Scaffold(
         topBar = {
             TopAppBar(
                 title = {
-                    Row(
-                        verticalAlignment = Alignment.CenterVertically,
-                        horizontalArrangement = Arrangement.spacedBy(12.dp)
-                    ) {
-                        Image(
-                            painter = painterResource(id = R.drawable.img_logo_xoanen),
-                            contentDescription = "Logo",
-                            modifier = Modifier.size(52.dp),
-                            contentScale = ContentScale.Fit
-                        )
-                        Text("Success", fontSize = 22.sp, fontWeight = FontWeight.Bold)
-                    }
-                },
-                navigationIcon = {
-                    IconButton(onClick = onBack) {
-                        Icon(
-                            painter = painterResource(id = R.drawable.ic_arrow_back),
-                            contentDescription = "Back"
-                        )
-                    }
-                },
-                actions = {
-                    IconButton(onClick = { }) {
-                        Icon(
-                            painter = painterResource(id = R.drawable.ic_info),
-                            contentDescription = "Info"
-                        )
-                    }
+                    Text(
+                        "Booking Success",
+                        fontWeight = FontWeight.Bold,
+                        fontSize = 20.sp
+                    )
                 }
             )
-        },
-        bottomBar = {
-            BottomNavigationBar(selectedIndex = 1)
         }
     ) { innerPadding ->
         Column(
             modifier = Modifier
-                .padding(innerPadding)
                 .fillMaxSize()
+                .padding(innerPadding)
                 .verticalScroll(rememberScrollState())
-                .padding(horizontal = 20.dp, vertical = 16.dp),
+                .background(Color.White),
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
-            // Progress bar
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.spacedBy(4.dp)
+            Spacer(modifier = Modifier.height(32.dp))
+
+            // Success icon
+            Box(
+                modifier = Modifier
+                    .size(120.dp)
+                    .clip(CircleShape)
+                    .background(Color(0xFF4CAF50)),
+                contentAlignment = Alignment.Center
             ) {
-                repeat(4) {
-                    Box(
-                        modifier = Modifier
-                            .weight(1f)
-                            .height(6.dp)
-                            .background(
-                                color = MaterialTheme.colorScheme.primary,
-                                shape = RoundedCornerShape(4.dp)
-                            )
-                    )
-                }
+                Text(
+                    "✓",
+                    fontSize = 60.sp,
+                    color = Color.White,
+                    fontWeight = FontWeight.Bold
+                )
             }
 
             Spacer(modifier = Modifier.height(24.dp))
 
-            // Info Card
+            // Success message
+            Text(
+                "Booking Successful!",
+                fontSize = 24.sp,
+                fontWeight = FontWeight.Bold,
+                color = Color(0xFF4CAF50)
+            )
+
+            Spacer(modifier = Modifier.height(8.dp))
+
+            Text(
+                "Your appointment has been confirmed",
+                fontSize = 16.sp,
+                color = Color.Gray
+            )
+
+            Spacer(modifier = Modifier.height(32.dp))
+
+            // Booking details
             Card(
-                modifier = Modifier.fillMaxWidth(),
-                shape = RoundedCornerShape(20.dp),
-                colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant)
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = 16.dp),
+                shape = RoundedCornerShape(16.dp),
+                colors = CardDefaults.cardColors(containerColor = Color(0xFFF5F5F5))
             ) {
                 Column(
-                    modifier = Modifier
-                        .padding(24.dp)
-                        .fillMaxWidth()
+                    modifier = Modifier.padding(24.dp),
+                    horizontalAlignment = Alignment.CenterHorizontally
                 ) {
-                    Row(verticalAlignment = Alignment.CenterVertically) {
-                        Image(
-                            painter = painterResource(id = R.drawable.ic_avatar),
-                            contentDescription = "Avatar",
-                            modifier = Modifier
-                                .size(64.dp)
-                                .clip(CircleShape)
-                        )
-                        Spacer(modifier = Modifier.width(16.dp))
-                        Text(
-                            "Nguyen Van A",
-                            fontWeight = FontWeight.Bold,
-                            fontSize = 20.sp,
-                            color = MaterialTheme.colorScheme.onSurface
-                        )
-                    }
+                    Text(
+                        "Booking Details",
+                        fontSize = 20.sp,
+                        fontWeight = FontWeight.Bold,
+                        color = Color(0xFF1976D2)
+                    )
 
                     Spacer(modifier = Modifier.height(16.dp))
 
-                    Text(
-                        "Service: $serviceName",
-                        fontSize = 16.sp,
-                        fontWeight = FontWeight.Medium,
-                        color = MaterialTheme.colorScheme.onSurface
-                    )
-                    Text(
-                        "Facility: Gia Dinh Hospital",
-                        fontSize = 16.sp,
-                        fontWeight = FontWeight.Medium,
-                        color = MaterialTheme.colorScheme.onSurface
-                    )
+                    BookingDetailRow("Service", serviceName)
+                    BookingDetailRow("Date", selectedDate)
+                    BookingDetailRow("Time", selectedTime)
+                    BookingDetailRow("Amount", "$${bill}")
 
-                    Spacer(modifier = Modifier.height(12.dp))
+                    Spacer(modifier = Modifier.height(16.dp))
 
-                    Row(verticalAlignment = Alignment.CenterVertically) {
-                        Icon(
-                            painter = painterResource(id = R.drawable.ic_calendar),
-                            contentDescription = null,
-                            tint = MaterialTheme.colorScheme.onSurfaceVariant,
-                            modifier = Modifier.size(20.dp)
-                        )
-                        Spacer(modifier = Modifier.width(6.dp))
-                        Text(
-                            "$selectedDate   $selectedTime",
-                            fontSize = 15.sp,
-                            color = MaterialTheme.colorScheme.onSurface
-                        )
+                    // QR Code placeholder
+                    Card(
+                        modifier = Modifier.size(120.dp),
+                        shape = RoundedCornerShape(8.dp),
+                        colors = CardDefaults.cardColors(containerColor = Color.White)
+                    ) {
+                        Box(
+                            modifier = Modifier.fillMaxSize(),
+                            contentAlignment = Alignment.Center
+                        ) {
+                            Image(
+                                painter = painterResource(id = R.drawable.qr_mockup),
+                                contentDescription = "QR Code",
+                                modifier = Modifier.size(100.dp),
+                                contentScale = ContentScale.Fit
+                            )
+                        }
                     }
 
-                    Spacer(modifier = Modifier.height(14.dp))
+                    Spacer(modifier = Modifier.height(8.dp))
+
                     Text(
-                        "Total bill: ${bill}.000đ",
-                        fontWeight = FontWeight.Bold,
-                        fontSize = 18.sp,
-                        color = MaterialTheme.colorScheme.onSurface
+                        "Show this QR code at the facility",
+                        fontSize = 12.sp,
+                        color = Color.Gray
                     )
                 }
             }
 
             Spacer(modifier = Modifier.height(32.dp))
 
-            Button(
-                onClick = onFinish,
+            // Action buttons
+            Column(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .height(52.dp),
-                shape = RoundedCornerShape(12.dp),
-                colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.primary)
+                    .padding(horizontal = 16.dp),
+                verticalArrangement = Arrangement.spacedBy(12.dp)
             ) {
-                Text("Finish ➜", fontSize = 18.sp)
+                Button(
+                    onClick = onFinish,
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .height(50.dp),
+                    shape = RoundedCornerShape(8.dp),
+                    colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF1976D2))
+                ) {
+                    Text(
+                        "Done",
+                        color = Color.White,
+                        fontWeight = FontWeight.Bold
+                    )
+                }
+
+                OutlinedButton(
+                    onClick = onBack,
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .height(50.dp),
+                    shape = RoundedCornerShape(8.dp)
+                ) {
+                    Text("View My Bookings")
+                }
             }
 
-            Spacer(modifier = Modifier.height(16.dp))
+            Spacer(modifier = Modifier.height(32.dp))
         }
     }
 }
 
-@Preview(showBackground = true, showSystemUi = true)
 @Composable
-fun BookingSuccessScreenPreview() {
-    VacTrackTheme {
-        BookingSuccessScreen(
-            serviceName = "Vaccine Services",
-            selectedDate = "14 May 2025",
-            selectedTime = "10:30 AM",
-            bill = 100
+fun BookingDetailRow(label: String, value: String) {
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(vertical = 4.dp),
+        horizontalArrangement = Arrangement.SpaceBetween
+    ) {
+        Text(
+            label,
+            fontSize = 14.sp,
+            color = Color.Gray
+        )
+        Text(
+            value,
+            fontSize = 14.sp,
+            fontWeight = FontWeight.Medium
         )
     }
-}
+} 

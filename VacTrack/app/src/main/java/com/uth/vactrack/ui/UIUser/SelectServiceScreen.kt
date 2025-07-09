@@ -8,26 +8,34 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowForward
 import androidx.compose.material3.*
-import androidx.compose.runtime.Composable
+import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
-import androidx.navigation.compose.rememberNavController
 import com.uth.vactrack.R
+import com.uth.vactrack.ui.viewmodel.ServiceViewModel
+import com.uth.vactrack.ui.viewmodel.SharedViewModel
+import com.uth.vactrack.ui.UIUser.BottomNavigationBar
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun SelectServiceScreen(
     navController: NavController,
-    onBack: () -> Unit = {}
+    onBack: () -> Unit = {},
+    serviceViewModel: ServiceViewModel = viewModel(),
+    sharedViewModel: SharedViewModel = viewModel()
 ) {
+    val serviceState by serviceViewModel.serviceState.collectAsStateWithLifecycle()
+    val sharedState by sharedViewModel.sharedState.collectAsStateWithLifecycle()
+
     Scaffold(
         topBar = {
             TopAppBar(
@@ -79,7 +87,7 @@ fun SelectServiceScreen(
                 )
                 Spacer(modifier = Modifier.width(12.dp))
                 Text(
-                    "Nguyen Van A",
+                    sharedState.currentUser?.name ?: "User",
                     fontWeight = FontWeight.Bold,
                     fontSize = 16.sp,
                     color = MaterialTheme.colorScheme.onBackground
@@ -115,52 +123,63 @@ fun SelectServiceScreen(
             )
             Spacer(modifier = Modifier.height(12.dp))
 
-            val services = listOf(
-                Triple("Vaccine Services", "Comprehensive vaccination programs for both children and adults, including routine immunizations and specialized vaccines.", 100),
-                Triple("Outpatient Vaccination", "Routine vaccinations, booster shots, and consultations with specialists for vaccine-related queries and concerns.", 200),
-                Triple("Emergency Vaccine Services", "Immediate vaccination for travel-related diseases, outbreak control, and emergency vaccination in case of exposure to infectious diseases.", 300),
-                Triple("Vaccine Administration", "Professional administration of various vaccines, including seasonal flu shots, hepatitis, and HPV vaccines, performed by trained healthcare professionals.", 50)
-            )
-
-            services.forEach { (title, description, bill) ->
-                Card(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(vertical = 6.dp)
-                        .clickable {
-                            navController.navigate(
-                                "select_time_and_slot/${Uri.encode(title)}/$bill"
-                            )
-                        },
-                    shape = RoundedCornerShape(12.dp),
-                    elevation = CardDefaults.cardElevation(4.dp),
-                    colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface)
+            if (serviceState.isLoading) {
+                Box(
+                    modifier = Modifier.fillMaxWidth(),
+                    contentAlignment = Alignment.Center
                 ) {
-                    Row(
+                    CircularProgressIndicator()
+                }
+            } else {
+                serviceState.services.forEach { service ->
+                    Card(
                         modifier = Modifier
                             .fillMaxWidth()
-                            .padding(16.dp),
-                        verticalAlignment = Alignment.CenterVertically
+                            .padding(vertical = 6.dp)
+                            .clickable {
+                                serviceViewModel.selectService(service)
+                                sharedViewModel.setSelectedServiceId(service.id)
+                                navController.navigate(
+                                    "select_time_and_slot/${Uri.encode(service.name)}/${service.price}"
+                                )
+                            },
+                        shape = RoundedCornerShape(12.dp),
+                        elevation = CardDefaults.cardElevation(4.dp),
+                        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface)
                     ) {
-                        Column(modifier = Modifier.weight(1f)) {
-                            Text(
-                                title,
-                                fontWeight = FontWeight.Bold,
-                                fontSize = 15.sp,
-                                color = MaterialTheme.colorScheme.onSurface
-                            )
-                            Spacer(modifier = Modifier.height(4.dp))
-                            Text(
-                                description,
-                                fontSize = 13.sp,
-                                color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.75f)
+                        Row(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(16.dp),
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            Column(modifier = Modifier.weight(1f)) {
+                                Text(
+                                    service.name,
+                                    fontWeight = FontWeight.Bold,
+                                    fontSize = 15.sp,
+                                    color = MaterialTheme.colorScheme.onSurface
+                                )
+                                Spacer(modifier = Modifier.height(4.dp))
+                                Text(
+                                    service.description,
+                                    fontSize = 13.sp,
+                                    color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.75f)
+                                )
+                                Spacer(modifier = Modifier.height(4.dp))
+                                Text(
+                                    "${service.price} VND",
+                                    fontWeight = FontWeight.Bold,
+                                    fontSize = 14.sp,
+                                    color = MaterialTheme.colorScheme.primary
+                                )
+                            }
+                            Icon(
+                                imageVector = Icons.Default.ArrowForward,
+                                contentDescription = "Go",
+                                tint = MaterialTheme.colorScheme.onSurfaceVariant
                             )
                         }
-                        Icon(
-                            imageVector = Icons.Default.ArrowForward,
-                            contentDescription = "Go",
-                            tint = MaterialTheme.colorScheme.onSurfaceVariant
-                        )
                     }
                 }
             }
@@ -175,10 +194,4 @@ fun SelectServiceScreen(
             Spacer(modifier = Modifier.height(80.dp))
         }
     }
-}
-
-@Preview(showBackground = true, showSystemUi = true)
-@Composable
-fun SelectServiceScreenPreview() {
-    SelectServiceScreen(navController = rememberNavController())
-}
+} 

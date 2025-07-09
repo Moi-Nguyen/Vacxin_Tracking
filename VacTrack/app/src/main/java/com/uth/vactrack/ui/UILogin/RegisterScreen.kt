@@ -4,237 +4,298 @@ import android.widget.Toast
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.text.KeyboardActions
+import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
+import androidx.compose.ui.ExperimentalComposeUiApi
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.focus.FocusRequester
+import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalFocusManager
+import androidx.compose.ui.platform.LocalSoftwareKeyboardController
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.text.input.VisualTransformation
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import androidx.lifecycle.viewmodel.compose.viewModel
 import com.uth.vactrack.R
-import com.uth.vactrack.config.AppConfig
-import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.launch
-import kotlinx.coroutines.withContext
-import org.json.JSONObject
-import java.net.HttpURLConnection
-import java.net.URL
-import androidx.compose.foundation.verticalScroll
-import androidx.compose.runtime.remember
-import androidx.compose.foundation.rememberScrollState
+import com.uth.vactrack.ui.viewmodel.AuthViewModel
+import com.uth.vactrack.ui.viewmodel.SharedViewModel
 
+@OptIn(ExperimentalComposeUiApi::class)
 @Composable
 fun RegisterScreen(
-    onRegisterSuccess: (String) -> Unit = {},
-    onBack: () -> Unit = {}
+    onRegisterSuccess: () -> Unit = {},
+    onBack: () -> Unit = {},
+    authViewModel: AuthViewModel = viewModel(),
+    sharedViewModel: SharedViewModel = viewModel()
 ) {
     val context = LocalContext.current
-    val scrollState = rememberScrollState()
+    val focusManager = LocalFocusManager.current
+    val keyboardController = LocalSoftwareKeyboardController.current
+    
+    val nameFocusRequester = remember { FocusRequester() }
+    val emailFocusRequester = remember { FocusRequester() }
+    val phoneFocusRequester = remember { FocusRequester() }
+    val passwordFocusRequester = remember { FocusRequester() }
+    val confirmPasswordFocusRequester = remember { FocusRequester() }
+    
+    var name by remember { mutableStateOf("") }
     var email by remember { mutableStateOf("") }
+    var phone by remember { mutableStateOf("") }
     var password by remember { mutableStateOf("") }
     var confirmPassword by remember { mutableStateOf("") }
-    var name by remember { mutableStateOf("") }
-    var fullName by remember { mutableStateOf("") }
-    var age by remember { mutableStateOf("") }
-    var dob by remember { mutableStateOf("") }
-    var address by remember { mutableStateOf("") }
-    var phone by remember { mutableStateOf("") }
-    var loading by remember { mutableStateOf(false) }
-    var error by remember { mutableStateOf<String?>(null) }
-    val blue = Color(0xFF1976D2)
+    var passwordVisible by remember { mutableStateOf(false) }
+    var confirmPasswordVisible by remember { mutableStateOf(false) }
+    
+    val authState by authViewModel.authState.collectAsStateWithLifecycle()
 
+    // Validation
+    val isNameValid = name.length >= 2
     val isEmailValid = android.util.Patterns.EMAIL_ADDRESS.matcher(email).matches()
+    val isPhoneValid = phone.length >= 10
     val isPasswordValid = password.length >= 6
     val isConfirmPasswordValid = password == confirmPassword && confirmPassword.isNotEmpty()
-    val isNameValid = name.isNotBlank()
-    val isFullNameValid = fullName.isNotBlank()
-    val isAgeValid = age.toIntOrNull()?.let { it in 1..120 } == true
-    val isDobValid = dob.matches(Regex("\\d{4}-\\d{2}-\\d{2}"))
-    val isAddressValid = address.isNotBlank()
-    val isPhoneValid = phone.length in 8..15
-    val canRegister = isEmailValid && isPasswordValid && isConfirmPasswordValid && isNameValid && isFullNameValid && isAgeValid && isDobValid && isAddressValid && isPhoneValid && !loading
+    val canRegister = isNameValid && isEmailValid && isPhoneValid && isPasswordValid && isConfirmPasswordValid && !authState.isLoading
 
-    fun showToast(msg: String) {
-        Toast.makeText(context, msg, Toast.LENGTH_SHORT).show()
+    LaunchedEffect(Unit) {
+        nameFocusRequester.requestFocus()
+    }
+
+    LaunchedEffect(authState) {
+        if (authState.isLoggedIn && authState.user != null) {
+            sharedViewModel.setCurrentUser(authState.user!!)
+            onRegisterSuccess()
+        }
+    }
+
+    LaunchedEffect(authState.error) {
+        authState.error?.let { error ->
+            Toast.makeText(context, error, Toast.LENGTH_SHORT).show()
+            authViewModel.clearError()
+        }
+    }
+
+    LaunchedEffect(authState.message) {
+        authState.message?.let { message ->
+            Toast.makeText(context, message, Toast.LENGTH_SHORT).show()
+            authViewModel.clearMessage()
+        }
     }
 
     fun register() {
-        loading = true
-        error = null
-        CoroutineScope(Dispatchers.IO).launch {
-            try {
-                val url = URL("${AppConfig.BASE_URL}/api/auth/register")
-                val conn = url.openConnection() as HttpURLConnection
-                conn.requestMethod = "POST"
-                conn.setRequestProperty("Content-Type", "application/json")
-                conn.doOutput = true
-                val nameFromFullName = fullName.trim().substringAfterLast(' ')
-                val body = JSONObject().apply {
-                    put("email", email)
-                    put("password", password)
-                    put("name", nameFromFullName)
-                    put("fullName", fullName)
-                    put("age", age.toInt())
-                    put("dob", dob)
-                    put("address", address)
-                    put("phone", phone)
-                    put("role", "user")
-                }.toString()
-                conn.outputStream.use { it.write(body.toByteArray()) }
-                val response = conn.inputStream.bufferedReader().readText()
-                val json = JSONObject(response)
-                withContext(Dispatchers.Main) {
-                    loading = false
-                    if (conn.responseCode == 200) {
-                        onRegisterSuccess(json.getString("token"))
-                        showToast(json.getString("message"))
-                    } else {
-                        error = json.optString("message", "Đăng ký thất bại")
-                    }
-                }
-            } catch (e: Exception) {
-                withContext(Dispatchers.Main) {
-                    loading = false
-                    error = e.localizedMessage ?: "Đăng ký thất bại"
-                }
-            }
-        }
+        authViewModel.register(email, password, name, phone)
     }
+
+    val blue = Color(0xFF1976D2)
 
     Box(
         modifier = Modifier
             .fillMaxSize()
             .background(Color.White)
+            .clickable(
+                indication = null,
+                interactionSource = remember { MutableInteractionSource() }
+            ) { focusManager.clearFocus() }
     ) {
         Column(
             modifier = Modifier
                 .fillMaxWidth()
-                .verticalScroll(scrollState)
                 .padding(horizontal = 24.dp),
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
             Spacer(modifier = Modifier.height(32.dp))
+            
+            // Back button
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.Start
+            ) {
+                IconButton(onClick = onBack) {
+                    Icon(
+                        painter = painterResource(id = R.drawable.ic_arrow_back),
+                        contentDescription = "Back",
+                        tint = Color.Black
+                    )
+                }
+            }
+            
+            Spacer(modifier = Modifier.height(16.dp))
+            
+            // Logo
             Image(
                 painter = painterResource(id = R.drawable.img_logo_xoanen),
                 contentDescription = "Logo VacTrack",
-                modifier = Modifier.size(220.dp)
+                modifier = Modifier.size(200.dp)
             )
-            Spacer(modifier = Modifier.height(12.dp))
+            
+            Spacer(modifier = Modifier.height(16.dp))
+            
             Text(
-                text = "Create Account",
-                style = TextStyle(fontWeight = FontWeight.Bold, fontSize = 26.sp, color = blue),
-                modifier = Modifier.fillMaxWidth(),
+                text = "Create your account",
+                style = TextStyle(
+                    fontWeight = FontWeight.Bold,
+                    fontSize = 24.sp,
+                    color = Color(0xFF7B83C2)
+                )
             )
-            Spacer(modifier = Modifier.height(6.dp))
-            Text(
-                text = "Sign up to get started!",
-                style = TextStyle(fontSize = 15.sp, color = Color(0xFF888888)),
-                modifier = Modifier.fillMaxWidth()
+            
+            Spacer(modifier = Modifier.height(32.dp))
+            
+            // Name field
+            OutlinedTextField(
+                value = name,
+                onValueChange = { name = it },
+                label = { Text("Full Name") },
+                singleLine = true,
+                isError = name.isNotBlank() && !isNameValid,
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .focusRequester(nameFocusRequester),
+                shape = RoundedCornerShape(14.dp),
+                colors = OutlinedTextFieldDefaults.colors(
+                    focusedBorderColor = blue,
+                    unfocusedBorderColor = Color.Black,
+                    errorBorderColor = Color.Red,
+                    focusedLabelColor = blue,
+                    unfocusedLabelColor = Color.Black
+                ),
+                keyboardOptions = KeyboardOptions(imeAction = ImeAction.Next),
+                keyboardActions = KeyboardActions(onNext = { emailFocusRequester.requestFocus() })
             )
-            Spacer(modifier = Modifier.height(22.dp))
+            
+            Spacer(modifier = Modifier.height(16.dp))
+            
+            // Email field
             OutlinedTextField(
                 value = email,
-                onValueChange = { email = it; if (error != null) error = null },
+                onValueChange = { email = it },
                 label = { Text("Email") },
                 singleLine = true,
                 isError = email.isNotBlank() && !isEmailValid,
-                modifier = Modifier.fillMaxWidth(),
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .focusRequester(emailFocusRequester),
                 shape = RoundedCornerShape(14.dp),
-                leadingIcon = { Icon(painterResource(id = R.drawable.ic_email), contentDescription = null, tint = blue) }
+                colors = OutlinedTextFieldDefaults.colors(
+                    focusedBorderColor = blue,
+                    unfocusedBorderColor = Color.Black,
+                    errorBorderColor = Color.Red,
+                    focusedLabelColor = blue,
+                    unfocusedLabelColor = Color.Black
+                ),
+                keyboardOptions = KeyboardOptions(imeAction = ImeAction.Next),
+                keyboardActions = KeyboardActions(onNext = { phoneFocusRequester.requestFocus() })
             )
-            Spacer(modifier = Modifier.height(10.dp))
+            
+            Spacer(modifier = Modifier.height(16.dp))
+            
+            // Phone field
+            OutlinedTextField(
+                value = phone,
+                onValueChange = { phone = it },
+                label = { Text("Phone Number") },
+                singleLine = true,
+                isError = phone.isNotBlank() && !isPhoneValid,
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .focusRequester(phoneFocusRequester),
+                shape = RoundedCornerShape(14.dp),
+                colors = OutlinedTextFieldDefaults.colors(
+                    focusedBorderColor = blue,
+                    unfocusedBorderColor = Color.Black,
+                    errorBorderColor = Color.Red,
+                    focusedLabelColor = blue,
+                    unfocusedLabelColor = Color.Black
+                ),
+                keyboardOptions = KeyboardOptions(imeAction = ImeAction.Next),
+                keyboardActions = KeyboardActions(onNext = { passwordFocusRequester.requestFocus() })
+            )
+            
+            Spacer(modifier = Modifier.height(16.dp))
+            
+            // Password field
             OutlinedTextField(
                 value = password,
-                onValueChange = { password = it; if (error != null) error = null },
+                onValueChange = { password = it },
                 label = { Text("Password") },
                 singleLine = true,
                 isError = password.isNotBlank() && !isPasswordValid,
-                visualTransformation = PasswordVisualTransformation(),
-                modifier = Modifier.fillMaxWidth(),
+                visualTransformation = if (passwordVisible) VisualTransformation.None else PasswordVisualTransformation(),
+                trailingIcon = {
+                    val icon = if (passwordVisible) R.drawable.ic_visibility else R.drawable.ic_visibility_off
+                    Icon(
+                        painter = painterResource(id = icon),
+                        contentDescription = if (passwordVisible) "Hide" else "Show",
+                        modifier = Modifier.clickable { passwordVisible = !passwordVisible }
+                    )
+                },
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .focusRequester(passwordFocusRequester),
                 shape = RoundedCornerShape(14.dp),
-                leadingIcon = { Icon(painterResource(id = R.drawable.ic_password), contentDescription = null, tint = blue) }
+                colors = OutlinedTextFieldDefaults.colors(
+                    focusedBorderColor = blue,
+                    unfocusedBorderColor = Color.Black,
+                    errorBorderColor = Color.Red,
+                    focusedLabelColor = blue,
+                    unfocusedLabelColor = Color.Black
+                ),
+                keyboardOptions = KeyboardOptions(imeAction = ImeAction.Next),
+                keyboardActions = KeyboardActions(onNext = { confirmPasswordFocusRequester.requestFocus() })
             )
-            Spacer(modifier = Modifier.height(10.dp))
+            
+            Spacer(modifier = Modifier.height(16.dp))
+            
+            // Confirm Password field
             OutlinedTextField(
                 value = confirmPassword,
-                onValueChange = { confirmPassword = it; if (error != null) error = null },
+                onValueChange = { confirmPassword = it },
                 label = { Text("Confirm Password") },
                 singleLine = true,
                 isError = confirmPassword.isNotBlank() && !isConfirmPasswordValid,
-                visualTransformation = PasswordVisualTransformation(),
-                modifier = Modifier.fillMaxWidth(),
+                visualTransformation = if (confirmPasswordVisible) VisualTransformation.None else PasswordVisualTransformation(),
+                trailingIcon = {
+                    val icon = if (confirmPasswordVisible) R.drawable.ic_visibility else R.drawable.ic_visibility_off
+                    Icon(
+                        painter = painterResource(id = icon),
+                        contentDescription = if (confirmPasswordVisible) "Hide" else "Show",
+                        modifier = Modifier.clickable { confirmPasswordVisible = !confirmPasswordVisible }
+                    )
+                },
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .focusRequester(confirmPasswordFocusRequester),
                 shape = RoundedCornerShape(14.dp),
-                leadingIcon = { Icon(painterResource(id = R.drawable.ic_password), contentDescription = null, tint = blue) }
+                colors = OutlinedTextFieldDefaults.colors(
+                    focusedBorderColor = blue,
+                    unfocusedBorderColor = Color.Black,
+                    errorBorderColor = Color.Red,
+                    focusedLabelColor = blue,
+                    unfocusedLabelColor = Color.Black
+                ),
+                keyboardOptions = KeyboardOptions(imeAction = ImeAction.Done),
+                keyboardActions = KeyboardActions(onDone = { 
+                    keyboardController?.hide()
+                    focusManager.clearFocus()
+                })
             )
-            Spacer(modifier = Modifier.height(10.dp))
-            OutlinedTextField(
-                value = fullName,
-                onValueChange = { fullName = it; if (error != null) error = null },
-                label = { Text("Full Name") },
-                singleLine = true,
-                isError = fullName.isNotBlank() && !isFullNameValid,
-                modifier = Modifier.fillMaxWidth(),
-                shape = RoundedCornerShape(14.dp),
-                leadingIcon = { Icon(painterResource(id = R.drawable.ic_person), contentDescription = null, tint = blue) }
-            )
-            Spacer(modifier = Modifier.height(10.dp))
-            Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(10.dp)) {
-                OutlinedTextField(
-                    value = age,
-                    onValueChange = { age = it.filter { c -> c.isDigit() }; if (error != null) error = null },
-                    label = { Text("Age") },
-                    singleLine = true,
-                    isError = age.isNotBlank() && !isAgeValid,
-                    modifier = Modifier.weight(1f),
-                    shape = RoundedCornerShape(14.dp),
-                    leadingIcon = { Icon(painterResource(id = R.drawable.ic_cake), contentDescription = null, tint = blue) }
-                )
-                OutlinedTextField(
-                    value = dob,
-                    onValueChange = { dob = it; if (error != null) error = null },
-                    label = { Text("DOB (dd-MM-yyyy)") },
-                    singleLine = true,
-                    isError = dob.isNotBlank() && !isDobValid,
-                    modifier = Modifier.weight(2f),
-                    shape = RoundedCornerShape(14.dp),
-                    leadingIcon = { Icon(painterResource(id = R.drawable.ic_calendar), contentDescription = null, tint = blue) }
-                )
-            }
-            Spacer(modifier = Modifier.height(10.dp))
-            OutlinedTextField(
-                value = address,
-                onValueChange = { address = it; if (error != null) error = null },
-                label = { Text("Address") },
-                singleLine = true,
-                isError = address.isNotBlank() && !isAddressValid,
-                modifier = Modifier.fillMaxWidth(),
-                shape = RoundedCornerShape(14.dp),
-                leadingIcon = { Icon(painterResource(id = R.drawable.ic_home), contentDescription = null, tint = blue) }
-            )
-            Spacer(modifier = Modifier.height(10.dp))
-            OutlinedTextField(
-                value = phone,
-                onValueChange = { phone = it.filter { c -> c.isDigit() }; if (error != null) error = null },
-                label = { Text("Phone") },
-                singleLine = true,
-                isError = phone.isNotBlank() && !isPhoneValid,
-                modifier = Modifier.fillMaxWidth(),
-                shape = RoundedCornerShape(14.dp),
-                leadingIcon = { Icon(painterResource(id = R.drawable.ic_phone), contentDescription = null, tint = blue) }
-            )
-            if (error != null) {
-                Text(error!!, color = Color.Red, fontSize = 14.sp, modifier = Modifier.padding(top = 4.dp))
-            }
-            Spacer(modifier = Modifier.height(18.dp))
+            
+            Spacer(modifier = Modifier.height(24.dp))
+            
+            // Register button
             Button(
                 onClick = { register() },
                 modifier = Modifier
@@ -247,15 +308,18 @@ fun RegisterScreen(
                 ),
                 elevation = ButtonDefaults.buttonElevation(6.dp)
             ) {
-                if (loading) CircularProgressIndicator(color = Color.White, modifier = Modifier.size(22.dp))
+                if (authState.isLoading) CircularProgressIndicator(color = Color.White, modifier = Modifier.size(22.dp))
                 else Text("Register", fontSize = 18.sp, fontWeight = FontWeight.Bold)
             }
+            
             Spacer(modifier = Modifier.height(16.dp))
+            
+            // Login link
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.Center
             ) {
-                Text("Already have an account? ", color = Color.Gray, fontSize = 14.sp)
+                Text("Already have an account? ", color = Color.Black, fontSize = 14.sp)
                 Text(
                     "Sign In",
                     color = blue,
@@ -264,6 +328,7 @@ fun RegisterScreen(
                     modifier = Modifier.clickable { onBack() }
                 )
             }
+            
             Spacer(modifier = Modifier.height(24.dp))
         }
     }

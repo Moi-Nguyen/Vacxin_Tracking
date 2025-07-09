@@ -12,103 +12,94 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material3.*
-import androidx.compose.runtime.Composable
+import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
-import androidx.navigation.compose.rememberNavController
 import com.uth.vactrack.R
-import com.uth.vactrack.ui.theme.VacTrackTheme
-
-data class Booking(
-    val name: String,
-    val service: String,
-    val facility: String,
-    val date: String,
-    val time: String
-)
+import com.uth.vactrack.ui.viewmodel.SharedViewModel
+import com.uth.vactrack.ui.viewmodel.TrackingBookingViewModel
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun TrackingBookingScreen(navController: NavController = rememberNavController()) {
-
-    val currentBookings = listOf(
-        Booking("Nguyen Van A", "Vaccine Services", "Gia Dinh Hospital", "13/05/2025", "8:00 AM"),
-        Booking("Nguyen Van A", "HPV Vaccine", "City Hospital", "15/05/2025", "9:00 AM")
-    )
-
-    val historyBookings = listOf(
-        Booking("Nguyen Van A", "Vaccine Services", "Gia Dinh Hospital", "10/04/2025", "10:00 AM"),
-        Booking("Nguyen Van A", "COVID-19 Vaccine", "City Hospital", "01/03/2025", "2:00 PM")
-    )
+fun TrackingBookingScreen(
+    navController: NavController,
+    trackingBookingViewModel: TrackingBookingViewModel = viewModel(),
+    sharedViewModel: SharedViewModel = viewModel()
+) {
+    val state by trackingBookingViewModel.state.collectAsStateWithLifecycle()
 
     Scaffold(
         topBar = {
-            CenterAlignedTopAppBar(
+            TopAppBar(
                 title = {
                     Text(
-                        text = "Tracking",
-                        fontSize = 26.sp,
-                        fontWeight = FontWeight.Bold
+                        "Tracking Booking",
+                        fontWeight = FontWeight.Bold,
+                        fontSize = 20.sp
                     )
-                },
-                navigationIcon = {
-                    IconButton(onClick = { navController.popBackStack() }) {
-                        Icon(
-                            painter = painterResource(id = R.drawable.ic_arrow_back),
-                            contentDescription = "Back"
-                        )
-                    }
-                },
-                actions = {
-                    IconButton(onClick = { }) {
-                        Icon(
-                            painter = painterResource(id = R.drawable.ic_info),
-                            contentDescription = "Info"
-                        )
-                    }
                 }
             )
-        },
-        bottomBar = {
-            BottomNavigationBar(selectedIndex = 2)
-        },
-        floatingActionButton = {
-            FloatingActionButton(
-                onClick = { navController.navigate("appointment") },
-                containerColor = MaterialTheme.colorScheme.primary
-            ) {
-                Icon(Icons.Default.Add, contentDescription = "Add Appointment")
-            }
         }
     ) { innerPadding ->
         Column(
             modifier = Modifier
                 .fillMaxSize()
                 .padding(innerPadding)
-                .padding(horizontal = 16.dp, vertical = 12.dp)
-                .verticalScroll(rememberScrollState()),
-            verticalArrangement = Arrangement.spacedBy(20.dp)
+                .verticalScroll(rememberScrollState())
+                .background(MaterialTheme.colorScheme.background)
         ) {
-            Text("Current calendar:", fontWeight = FontWeight.Bold, fontSize = 20.sp)
-            LazyRow(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
-                items(currentBookings) { booking ->
-                    BookingCardExpanded(booking)
+            // Current Bookings Section
+            Text(
+                "Current Bookings",
+                fontSize = 20.sp,
+                fontWeight = FontWeight.Bold,
+                modifier = Modifier.padding(horizontal = 16.dp, vertical = 16.dp)
+            )
+
+            if (state.isLoading) {
+                Box(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(16.dp),
+                    contentAlignment = Alignment.Center
+                ) {
+                    CircularProgressIndicator()
+                }
+            } else {
+                LazyRow(
+                    contentPadding = PaddingValues(horizontal = 16.dp),
+                    horizontalArrangement = Arrangement.spacedBy(12.dp)
+                ) {
+                    items(state.currentBookings) { booking ->
+                        CurrentBookingCard(booking = booking)
+                    }
                 }
             }
 
-            Text("History calendar:", fontWeight = FontWeight.Bold, fontSize = 20.sp)
-            LazyRow(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
-                items(historyBookings) { booking ->
-                    BookingCardExpanded(booking)
-                }
+            Spacer(modifier = Modifier.height(24.dp))
+
+            // History Bookings Section
+            Text(
+                "Booking History",
+                fontSize = 20.sp,
+                fontWeight = FontWeight.Bold,
+                modifier = Modifier.padding(horizontal = 16.dp, vertical = 16.dp)
+            )
+
+            state.historyBookings.forEach { booking ->
+                HistoryBookingCard(
+                    booking = booking,
+                    modifier = Modifier.padding(horizontal = 16.dp, vertical = 4.dp)
+                )
             }
 
             Spacer(modifier = Modifier.height(80.dp))
@@ -117,51 +108,128 @@ fun TrackingBookingScreen(navController: NavController = rememberNavController()
 }
 
 @Composable
-fun BookingCardExpanded(booking: Booking) {
+fun CurrentBookingCard(booking: com.uth.vactrack.ui.viewmodel.Booking) {
     Card(
-        shape = RoundedCornerShape(20.dp),
-        elevation = CardDefaults.cardElevation(6.dp),
         modifier = Modifier
-            .width(320.dp)
-            .wrapContentHeight(),
+            .width(280.dp)
+            .height(200.dp),
+        shape = RoundedCornerShape(16.dp),
         colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant)
     ) {
-        Column(modifier = Modifier.padding(20.dp)) {
-            Row(verticalAlignment = Alignment.CenterVertically) {
-                Image(
-                    painter = painterResource(id = R.drawable.ic_avatar),
-                    contentDescription = "Avatar",
-                    modifier = Modifier
-                        .size(52.dp)
-                        .clip(CircleShape)
+        Column(
+            modifier = Modifier.padding(16.dp)
+        ) {
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Text(
+                    booking.service,
+                    fontSize = 16.sp,
+                    fontWeight = FontWeight.Bold
                 )
-                Spacer(modifier = Modifier.width(12.dp))
-                Text(booking.name, fontWeight = FontWeight.Bold, fontSize = 20.sp)
+                Image(
+                    painter = painterResource(id = R.drawable.ic_service_vaccination),
+                    contentDescription = "Service Icon",
+                    modifier = Modifier.size(32.dp)
+                )
             }
 
-            Spacer(modifier = Modifier.height(12.dp))
-            Text("Services: ${booking.service}", fontSize = 16.sp)
-            Text("Facility: ${booking.facility}", fontSize = 16.sp)
+            Spacer(modifier = Modifier.height(8.dp))
 
-            Spacer(modifier = Modifier.height(10.dp))
-            Row(verticalAlignment = Alignment.CenterVertically) {
-                Icon(
-                    painter = painterResource(id = R.drawable.ic_calendar),
-                    contentDescription = "Date",
-                    modifier = Modifier.size(18.dp),
-                    tint = Color.Gray
+            Text(
+                booking.facility,
+                fontSize = 14.sp,
+                color = Color.Gray
+            )
+
+            Spacer(modifier = Modifier.height(8.dp))
+
+            Text(
+                "Date: ${booking.date}",
+                fontSize = 12.sp,
+                color = Color.Gray
+            )
+
+            Text(
+                "Time: ${booking.time}",
+                fontSize = 12.sp,
+                color = Color.Gray
+            )
+
+            Spacer(modifier = Modifier.height(8.dp))
+
+            Button(
+                onClick = { /* Navigate to booking details */ },
+                modifier = Modifier.fillMaxWidth(),
+                shape = RoundedCornerShape(8.dp),
+                colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF1976D2))
+            ) {
+                Text(
+                    "View Details",
+                    color = Color.White,
+                    fontSize = 12.sp
                 )
-                Spacer(modifier = Modifier.width(6.dp))
-                Text("${booking.date}   ${booking.time}", fontSize = 15.sp)
             }
         }
     }
 }
 
-@Preview(showSystemUi = true)
 @Composable
-fun PreviewTrackingBookingScreen() {
-    VacTrackTheme {
-        TrackingBookingScreen()
+fun HistoryBookingCard(
+    booking: com.uth.vactrack.ui.viewmodel.Booking,
+    modifier: Modifier = Modifier
+) {
+    Card(
+        modifier = modifier,
+        shape = RoundedCornerShape(12.dp),
+        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant)
+    ) {
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(16.dp),
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            Image(
+                painter = painterResource(id = R.drawable.ic_service_vaccination),
+                contentDescription = "Service Icon",
+                modifier = Modifier.size(48.dp)
+            )
+
+            Spacer(modifier = Modifier.width(16.dp))
+
+            Column(
+                modifier = Modifier.weight(1f)
+            ) {
+                Text(
+                    booking.service,
+                    fontSize = 16.sp,
+                    fontWeight = FontWeight.Bold
+                )
+                Text(
+                    booking.facility,
+                    fontSize = 14.sp,
+                    color = Color.Gray
+                )
+                Text(
+                    "${booking.date} - ${booking.time}",
+                    fontSize = 12.sp,
+                    color = Color.Gray
+                )
+            }
+
+            Icon(
+                imageVector = Icons.Default.Add,
+                contentDescription = "View Details",
+                modifier = Modifier
+                    .size(24.dp)
+                    .clip(CircleShape)
+                    .background(Color(0xFF1976D2))
+                    .padding(4.dp),
+                tint = Color.White
+            )
+        }
     }
-}
+} 

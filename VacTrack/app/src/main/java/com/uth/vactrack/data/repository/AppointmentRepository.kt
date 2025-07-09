@@ -10,9 +10,27 @@ import java.net.URL
 import com.uth.vactrack.config.AppConfig
 import com.uth.vactrack.data.model.BookingRequest
 import com.uth.vactrack.data.model.BookingResponse
+import retrofit2.http.Body
+import retrofit2.http.Header
+import retrofit2.http.POST
+import retrofit2.Retrofit
+import retrofit2.converter.gson.GsonConverterFactory
+
+interface BookingApiService {
+    @POST("/api/booking")
+    suspend fun createBooking(
+        @Header("Authorization") token: String,
+        @Body request: BookingRequest
+    ): BookingResponse
+}
 
 class AppointmentRepository {
-    
+    private val retrofit = Retrofit.Builder()
+        .baseUrl(AppConfig.BASE_URL)
+        .addConverterFactory(GsonConverterFactory.create())
+        .build()
+    private val bookingApi = retrofit.create(BookingApiService::class.java)
+
     suspend fun createAppointment(
         userId: String,
         serviceName: String,
@@ -157,50 +175,16 @@ class AppointmentRepository {
         }
     }
 
-    suspend fun bookAppointment(request: BookingRequest): Result<BookingResponse> {
-        return withContext(Dispatchers.IO) {
-            try {
-                val url = URL("${AppConfig.BASE_URL}/api/booking")
-                val conn = url.openConnection() as HttpURLConnection
-                conn.requestMethod = "POST"
-                conn.setRequestProperty("Content-Type", "application/json")
-                conn.doOutput = true
-                val body = JSONObject().apply {
-                    put("userId", request.userId)
-                    put("serviceId", request.serviceId)
-                    put("facilityId", request.facilityId)
-                    put("date", request.date)
-                    put("time", request.time)
-                }.toString()
-                conn.outputStream.use { it.write(body.toByteArray()) }
-                val response = conn.inputStream.bufferedReader().readText()
-                val json = JSONObject(response)
-                if (conn.responseCode == 200) {
-                    val booking = json.optJSONObject("booking")
-                    val bookingDetail = if (booking != null) {
-                        com.uth.vactrack.data.model.BookingDetail(
-                            id = booking.optString("id", ""),
-                            userId = booking.optString("userId", ""),
-                            serviceId = booking.optString("serviceId", ""),
-                            facilityId = booking.optString("facilityId", ""),
-                            date = booking.optString("date", ""),
-                            time = booking.optString("time", ""),
-                            status = booking.optString("status", "")
-                        )
-                    } else null
-                    Result.success(
-                        BookingResponse(
-                            success = json.optBoolean("success", false),
-                            message = json.optString("message", ""),
-                            booking = bookingDetail
-                        )
-                    )
-                } else {
-                    Result.failure(Exception(json.optString("message", "Booking failed")))
-                }
-            } catch (e: Exception) {
-                Result.failure(e)
+    suspend fun bookAppointmentWithApi(token: String, request: BookingRequest): Result<BookingResponse> {
+        return try {
+            val response = bookingApi.createBooking("Bearer $token", request)
+            if (response.success) {
+                Result.success(response)
+            } else {
+                Result.failure(Exception(response.message))
             }
+        } catch (e: Exception) {
+            Result.failure(e)
         }
     }
 } 

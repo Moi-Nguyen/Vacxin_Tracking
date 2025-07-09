@@ -5,5 +5,7 @@ data class BookingRequest(
     val serviceId: String,
     val facilityId: String,
     val date: String,
-    val time: String
+    val time: String,
+    val doseNumber: Int = 1,
+    val notes: String? = null
 ) 
