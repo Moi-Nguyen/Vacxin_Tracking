@@ -6,6 +6,6 @@ data class BookingRequest(
     val facilityId: String,
     val date: String,
     val time: String,
-    val doseNumber: Int = 1,
+    //val doseNumber: Int = 1,
     val notes: String? = null
 ) 

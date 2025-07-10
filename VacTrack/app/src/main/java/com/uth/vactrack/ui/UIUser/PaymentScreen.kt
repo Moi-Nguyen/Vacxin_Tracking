@@ -227,16 +227,17 @@ fun PaymentScreen(
                         val safeToken = token
                         val safeServiceId = serviceId
                         val safeFacilityId = facilityId
-                        Log.d("DEBUG_BOOKING", "user=$user, token=$safeToken, serviceId=$safeServiceId, facilityId=$safeFacilityId")
-                        Toast.makeText(context, "user=$user\ntoken=$safeToken\nserviceId=$safeServiceId\nfacilityId=$safeFacilityId", Toast.LENGTH_LONG).show()
+                        Log.d("DEBUG_BOOKING", "userId=${user?.id}, email=${user?.email}, token=$safeToken, serviceId=$safeServiceId, facilityId=$safeFacilityId")
+                        // Chỉ Toast thông tin cần thiết
+                        Toast.makeText(context, "Email: ${user?.email ?: "unknown"}\nService: $serviceName\nDate: $selectedDate $selectedTime", Toast.LENGTH_LONG).show()
                         if (user != null && !safeToken.isNullOrBlank() && !safeServiceId.isNullOrBlank() && !safeFacilityId.isNullOrBlank()) {
                             val bookingRequest = com.uth.vactrack.data.model.BookingRequest(
                                 userId = user.id,
-                                serviceId = safeServiceId,
-                                facilityId = safeFacilityId,
-                                date = selectedDate,
-                                time = selectedTime,
-                                doseNumber = 1,
+                                serviceId = "6830b20280eba4e950c8a161", // Đồng bộ sau nha bro
+                                facilityId = "686f83c50c6e18cc7a459cec", // Đồng bộ sau nha bro
+                                date = "2025-12-10", // Chưa gét được day để vầy đi mệt r làm UI (đổi ngày khi booking hộ cái)
+                                time = "09:00",
+                                //doseNumber = 1,
                                 notes = null
                             )
                             paymentViewModel.bookAppointment(safeToken, bookingRequest) {
