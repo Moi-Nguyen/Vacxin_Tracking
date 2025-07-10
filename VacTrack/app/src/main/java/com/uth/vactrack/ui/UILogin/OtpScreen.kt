@@ -35,6 +35,8 @@ import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.interaction.collectIsFocusedAsState
+import androidx.compose.ui.input.key.onKeyEvent
+import android.view.KeyEvent as AndroidKeyEvent
 
 @Composable
 fun OtpScreen(
@@ -139,21 +141,32 @@ fun OtpScreen(
                                 val newInputs = otpInputs.toMutableList()
                                 newInputs[i] = newValue
                                 otpInputs = newInputs
-                                val fullOtp = otpInputs.joinToString("")
-                                println("DEBUG OTP INPUT: $fullOtp")
-                                viewModel.setOtp(fullOtp)
+                                viewModel.setOtp(otpInputs.joinToString(""))
                                 if (newValue.isNotEmpty() && i < otpLength - 1) {
                                     focusRequesters[i + 1].requestFocus()
-                                }
-                                if (newValue.isEmpty() && i > 0) {
-                                    focusRequesters[i - 1].requestFocus()
                                 }
                             }
                         },
                         modifier = Modifier
                             .width(48.dp)
                             .height(56.dp)
-                            .focusRequester(focusRequesters[i]),
+                            .focusRequester(focusRequesters[i])
+                            .onKeyEvent { event ->
+                                if (event.nativeKeyEvent.keyCode == AndroidKeyEvent.KEYCODE_DEL) {
+                                    if (otpInputs[i].isEmpty() && i > 0) {
+                                        val newInputs = otpInputs.toMutableList()
+                                        newInputs[i - 1] = ""
+                                        otpInputs = newInputs
+                                        viewModel.setOtp(otpInputs.joinToString(""))
+                                        focusRequesters[i - 1].requestFocus()
+                                        true
+                                    } else {
+                                        false
+                                    }
+                                } else {
+                                    false
+                                }
+                            },
                         shape = RoundedCornerShape(16.dp),
                         textStyle = TextStyle(
                             fontSize = 22.sp,

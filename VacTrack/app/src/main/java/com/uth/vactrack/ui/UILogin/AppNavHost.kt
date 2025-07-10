@@ -23,7 +23,10 @@ fun AppNavHost(
             LoginScreen(
                 onLoginSuccess = { navController.navigate("home") },
                 onSignUpClick = { navController.navigate("register") },
-                onForgotPassword = { email -> navController.navigate("forgot_password") },
+                onForgotPassword = { email -> 
+                    val encodedEmail = URLEncoder.encode(email, StandardCharsets.UTF_8.toString())
+                    navController.navigate("forgot_password/$encodedEmail")
+                },
                 sharedViewModel = sharedViewModel
             )
         }
@@ -33,8 +36,16 @@ fun AppNavHost(
                 sharedViewModel = sharedViewModel
             )
         }
-        composable("forgot_password") {
+        composable(
+            "forgot_password/{email}",
+            arguments = listOf(
+                navArgument("email") { type = NavType.StringType }
+            )
+        ) { backStackEntry ->
+            val email = backStackEntry.arguments?.getString("email") ?: ""
+            val decodedEmail = URLDecoder.decode(email, StandardCharsets.UTF_8.toString())
             ForgotPasswordScreen(
+                initialEmail = decodedEmail,
                 onBack = { navController.popBackStack() },
                 onRequestResetSuccess = { email -> 
                     val encodedEmail = URLEncoder.encode(email, StandardCharsets.UTF_8.toString())
