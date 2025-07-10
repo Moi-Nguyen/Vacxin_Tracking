@@ -16,23 +16,35 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
+import androidx.navigation.compose.rememberNavController
 import com.uth.vactrack.R
 import com.uth.vactrack.ui.viewmodel.HomeViewModel
 import com.uth.vactrack.ui.viewmodel.SharedViewModel
 
 @Composable
 fun HomeScreen(
-    navController: NavController,
+    navController: NavController = rememberNavController(),
     homeViewModel: HomeViewModel = viewModel(),
-    sharedViewModel: SharedViewModel = viewModel()
+    sharedViewModel: SharedViewModel
 ) {
     val state by homeViewModel.state.collectAsStateWithLifecycle()
+    val sharedState by sharedViewModel.sharedState.collectAsStateWithLifecycle()
     var menuExpanded by remember { mutableStateOf(false) }
+
+    // Load appointments khi component được tạo
+    LaunchedEffect(Unit) {
+        val userId = sharedState.userId
+        val token = sharedState.token
+        if (!userId.isNullOrBlank() && !token.isNullOrBlank()) {
+            homeViewModel.loadAppointments(userId, token)
+        }
+    }
 
     Column(
         modifier = Modifier
@@ -132,6 +144,153 @@ fun HomeScreen(
                             },
                             colors = MenuDefaults.itemColors(textColor = Color.White)
                         )
+                    }
+                }
+            }
+        }
+
+        // ===== Appointments Section =====
+        Card(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(16.dp),
+            shape = RoundedCornerShape(12.dp),
+            colors = CardDefaults.cardColors(containerColor = Color(0xFFF8F9FA))
+        ) {
+            Column(
+                modifier = Modifier.padding(16.dp)
+            ) {
+                Text(
+                    text = "Lịch hẹn của bạn",
+                    fontSize = 18.sp,
+                    fontWeight = FontWeight.Bold,
+                    color = Color(0xFF2D25C9),
+                    modifier = Modifier.padding(bottom = 12.dp)
+                )
+                
+                if (state.isLoading) {
+                    Box(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(32.dp),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        CircularProgressIndicator(color = Color(0xFF2D25C9))
+                    }
+                } else {
+                    val allBookings = state.bookings + state.appointments.map { appointment ->
+                        com.uth.vactrack.data.model.BookingDetail(
+                            id = appointment.id,
+                            userId = appointment.userId,
+                            serviceId = "",
+                            facilityId = "",
+                            facilityName = null,
+                            date = appointment.date,
+                            time = appointment.time,
+                            status = appointment.status.name,
+                            doseNumber = 1,
+                            price = appointment.price,
+                            paymentStatus = null,
+                            doctorName = null
+                        )
+                    }
+                    
+                    if (allBookings.isEmpty()) {
+                        // Hiển thị thông báo khi không có lịch hẹn
+                        Column(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(32.dp),
+                            horizontalAlignment = Alignment.CenterHorizontally
+                        ) {
+                            Icon(
+                                painter = painterResource(id = R.drawable.ic_calendar),
+                                contentDescription = "No appointments",
+                                modifier = Modifier.size(48.dp),
+                                tint = Color.Gray
+                            )
+                            Spacer(modifier = Modifier.height(16.dp))
+                            Text(
+                                text = "Bạn chưa có lịch hẹn nào",
+                                fontSize = 16.sp,
+                                color = Color.Gray,
+                                textAlign = TextAlign.Center
+                            )
+                            Spacer(modifier = Modifier.height(8.dp))
+                            Text(
+                                text = "Hãy đặt lịch hẹn để được tư vấn và tiêm chủng",
+                                fontSize = 14.sp,
+                                color = Color.Gray,
+                                textAlign = TextAlign.Center
+                            )
+                            Spacer(modifier = Modifier.height(16.dp))
+                            Button(
+                                onClick = { navController.navigate("main") },
+                                colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF2D25C9)),
+                                shape = RoundedCornerShape(8.dp)
+                            ) {
+                                Text("Đặt lịch hẹn ngay", color = Color.White)
+                            }
+                        }
+                    } else {
+                        // Hiển thị danh sách lịch hẹn
+                        allBookings.take(3).forEach { booking ->
+                            Card(
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .padding(vertical = 4.dp),
+                                shape = RoundedCornerShape(8.dp),
+                                colors = CardDefaults.cardColors(containerColor = Color.White)
+                            ) {
+                                Row(
+                                    modifier = Modifier
+                                        .fillMaxWidth()
+                                        .padding(12.dp),
+                                    verticalAlignment = Alignment.CenterVertically
+                                ) {
+                                    Icon(
+                                        painter = painterResource(id = R.drawable.ic_calendar),
+                                        contentDescription = "Appointment",
+                                        tint = Color(0xFF2D25C9),
+                                        modifier = Modifier.size(24.dp)
+                                    )
+                                    Spacer(modifier = Modifier.width(12.dp))
+                                    Column(modifier = Modifier.weight(1f)) {
+                                        Text(
+                                            text = booking.facilityName ?: "Dịch vụ",
+                                            fontSize = 14.sp,
+                                            fontWeight = FontWeight.Medium,
+                                            color = Color.Black
+                                        )
+                                        Text(
+                                            text = "${booking.date} - ${booking.time}",
+                                            fontSize = 12.sp,
+                                            color = Color.Gray
+                                        )
+                                        if (!booking.status.isNullOrBlank()) {
+                                            Text(
+                                                text = "Trạng thái: ${booking.status}",
+                                                fontSize = 11.sp,
+                                                color = Color.Gray
+                                            )
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                        
+                        if (allBookings.size > 3) {
+                            TextButton(
+                                onClick = { navController.navigate("appointment") },
+                                modifier = Modifier.align(Alignment.End)
+                            ) {
+                                Text(
+                                    text = "Xem tất cả (${allBookings.size})",
+                                    color = Color(0xFF2D25C9),
+                                    fontSize = 12.sp
+                                )
+                            }
+                        }
                     }
                 }
             }

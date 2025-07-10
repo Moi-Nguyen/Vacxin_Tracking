@@ -28,14 +28,17 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import com.uth.vactrack.R
 import com.uth.vactrack.ui.viewmodel.EditProfileViewModel
 import com.uth.vactrack.ui.viewmodel.SharedViewModel
+import androidx.navigation.NavController
+import androidx.navigation.compose.rememberNavController
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun EditProfileScreen(
+    navController: NavController,
+    sharedViewModel: SharedViewModel,
     onBack: () -> Unit = {},
     onSubmit: () -> Unit = {},
-    editProfileViewModel: EditProfileViewModel = viewModel(),
-    sharedViewModel: SharedViewModel = viewModel()
+    editProfileViewModel: EditProfileViewModel = viewModel()
 ) {
     val context = LocalContext.current
     val state by editProfileViewModel.state.collectAsStateWithLifecycle()

@@ -13,6 +13,7 @@ data class SharedState(
     val isDarkTheme: Boolean = false,
     val isLoggedIn: Boolean = false,
     val token: String? = null,
+    val userId: String? = null,
     val selectedServiceId: String? = null,
     val selectedFacilityId: String? = null
 )
@@ -32,7 +33,8 @@ class SharedViewModel : ViewModel() {
         if (currentUser != null) {
             _sharedState.value = _sharedState.value.copy(
                 currentUser = currentUser,
-                isLoggedIn = true
+                isLoggedIn = true,
+                userId = currentUser.id
             )
         }
     }
@@ -40,14 +42,17 @@ class SharedViewModel : ViewModel() {
     fun setCurrentUser(user: User) {
         _sharedState.value = _sharedState.value.copy(
             currentUser = user,
-            isLoggedIn = true
+            isLoggedIn = true,
+            userId = user.id
         )
     }
 
     fun clearCurrentUser() {
         _sharedState.value = _sharedState.value.copy(
             currentUser = null,
-            isLoggedIn = false
+            isLoggedIn = false,
+            userId = null,
+            token = null
         )
     }
 
@@ -71,9 +76,15 @@ class SharedViewModel : ViewModel() {
     fun setToken(token: String) {
         _sharedState.value = _sharedState.value.copy(token = token)
     }
+    
+    fun setUserId(userId: String) {
+        _sharedState.value = _sharedState.value.copy(userId = userId)
+    }
+    
     fun setSelectedServiceId(serviceId: String) {
         _sharedState.value = _sharedState.value.copy(selectedServiceId = serviceId)
     }
+    
     fun setSelectedFacilityId(facilityId: String) {
         _sharedState.value = _sharedState.value.copy(selectedFacilityId = facilityId)
     }

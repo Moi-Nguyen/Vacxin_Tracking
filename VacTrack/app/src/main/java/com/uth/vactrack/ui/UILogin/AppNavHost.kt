@@ -8,129 +8,82 @@ import androidx.navigation.navArgument
 import com.uth.vactrack.ui.UIUser.*
 import com.uth.vactrack.ui.viewmodel.SharedViewModel
 import androidx.lifecycle.viewmodel.compose.viewModel
+import androidx.navigation.NavHostController
 import java.net.URLDecoder
 import java.net.URLEncoder
 import java.nio.charset.StandardCharsets
 
 @Composable
 fun AppNavHost(
-    startDestination: String = "login",
+    navController: NavHostController = rememberNavController(),
     sharedViewModel: SharedViewModel = viewModel()
 ) {
-    val navController = rememberNavController()
-    val sharedState by sharedViewModel.sharedState.collectAsStateWithLifecycle()
-
-    NavHost(navController = navController, startDestination = startDestination) {
-
+    NavHost(navController = navController, startDestination = "login") {
         composable("login") {
             LoginScreen(
-                onLoginSuccess = {
-                    navController.navigate("home") {
-                        popUpTo("login") { inclusive = true }
-                    }
-                },
-                onSignUpClick = { navController.navigate("register") },
-                onForgotPassword = { email ->
-                    navController.navigate("forgot_password?email=$email")
-                }
+                onLoginSuccess = { navController.navigate("home") },
+                sharedViewModel = sharedViewModel
             )
         }
-
         composable("register") {
-            RegisterScreen(
-                onRegisterSuccess = {
-                    navController.navigate("login") {
-                        popUpTo("login") { inclusive = true }
-                    }
-                },
-                onBack = { navController.popBackStack() }
-            )
+            RegisterScreen(sharedViewModel = sharedViewModel)
         }
-
-        composable(
-            "forgot_password?email={email}",
-            arguments = listOf(navArgument("email") {
-                type = NavType.StringType
-                defaultValue = ""
-            })
-        ) { backStackEntry ->
-            val email = backStackEntry.arguments?.getString("email") ?: ""
-            ForgotPasswordScreen(
-                initialEmail = email,
-                onBack = { navController.popBackStack() },
-                onRequestResetSuccess = { sentEmail ->
-                    navController.navigate("otp?email=$sentEmail")
-                }
-            )
+        composable("profile") {
+            ProfileScreen(navController = navController, sharedViewModel = sharedViewModel)
         }
-
-        composable(
-            "otp?email={email}",
-            arguments = listOf(navArgument("email") {
-                type = NavType.StringType
-                defaultValue = ""
-            })
-        ) { backStackEntry ->
-            val email = backStackEntry.arguments?.getString("email") ?: ""
-            OtpScreen(
-                email = email,
-                onOtpVerified = { resetToken ->
-                    navController.navigate("set_new_password?resetToken=$resetToken")
-                },
-                onResend = { navController.popBackStack() },
-                onBack = { navController.popBackStack() }
-            )
+        composable("edit_profile") {
+            EditProfileScreen(navController = navController, sharedViewModel = sharedViewModel)
         }
-
-        composable(
-            "set_new_password?resetToken={resetToken}",
-            arguments = listOf(navArgument("resetToken") {
-                type = NavType.StringType
-                defaultValue = ""
-            })
-        ) { backStackEntry ->
-            val resetToken = backStackEntry.arguments?.getString("resetToken") ?: ""
-            SetNewPasswordScreen(
-                resetToken = resetToken,
-                onPasswordReset = {
-                    navController.navigate("login") {
-                        popUpTo("login") { inclusive = true }
-                    }
-                },
-                onBack = { navController.popBackStack() }
-            )
-        }
-
         composable("home") {
-            HomeScreen(
-                navController = navController,
-                sharedViewModel = sharedViewModel
-            )
+            HomeScreen(navController = navController, sharedViewModel = sharedViewModel)
         }
-
-        composable("main") {
-            MainScreen(
-                navController = navController,
-                sharedViewModel = sharedViewModel
-            )
-        }
-
         composable("appointment") {
-            AppointmentScreen(
+            AppointmentScreen(navController = navController, sharedViewModel = sharedViewModel)
+        }
+        composable(
+            "booking_success/{serviceName}/{selectedDate}/{selectedTime}/{bill}",
+            arguments = listOf(
+                navArgument("serviceName") { type = NavType.StringType },
+                navArgument("selectedDate") { type = NavType.StringType },
+                navArgument("selectedTime") { type = NavType.StringType },
+                navArgument("bill") { type = NavType.IntType }
+            )
+        ) { backStackEntry ->
+            val serviceName = backStackEntry.arguments?.getString("serviceName") ?: ""
+            val selectedDate = backStackEntry.arguments?.getString("selectedDate") ?: ""
+            val selectedTime = backStackEntry.arguments?.getString("selectedTime") ?: ""
+            val bill = backStackEntry.arguments?.getInt("bill") ?: 0
+            BookingSuccessScreen(
+                serviceName = serviceName,
+                selectedDate = selectedDate,
+                selectedTime = selectedTime,
+                bill = bill,
                 navController = navController,
-                onBack = { navController.popBackStack() },
                 sharedViewModel = sharedViewModel
             )
         }
-
-        composable("select_service") {
-            SelectServiceScreen(
+        composable(
+            "payment/{serviceName}/{selectedDate}/{selectedTime}/{bill}",
+            arguments = listOf(
+                navArgument("serviceName") { type = NavType.StringType },
+                navArgument("selectedDate") { type = NavType.StringType },
+                navArgument("selectedTime") { type = NavType.StringType },
+                navArgument("bill") { type = NavType.IntType }
+            )
+        ) { backStackEntry ->
+            val serviceName = backStackEntry.arguments?.getString("serviceName") ?: ""
+            val selectedDate = backStackEntry.arguments?.getString("selectedDate") ?: ""
+            val selectedTime = backStackEntry.arguments?.getString("selectedTime") ?: ""
+            val bill = backStackEntry.arguments?.getInt("bill") ?: 0
+            PaymentScreen(
+                serviceName = serviceName,
+                selectedDate = selectedDate,
+                selectedTime = selectedTime,
+                bill = bill,
                 navController = navController,
-                onBack = { navController.popBackStack() },
                 sharedViewModel = sharedViewModel
             )
         }
-
         composable(
             "select_time_and_slot/{serviceName}/{bill}",
             arguments = listOf(
@@ -144,112 +97,17 @@ fun AppNavHost(
                 serviceName = serviceName,
                 bill = bill,
                 navController = navController,
-                onBack = { navController.popBackStack() },
                 sharedViewModel = sharedViewModel
             )
         }
-
-        composable(
-            "payment/{service}/{date}/{time}/{bill}",
-            arguments = listOf(
-                navArgument("service") { type = NavType.StringType },
-                navArgument("date") { type = NavType.StringType },
-                navArgument("time") { type = NavType.StringType },
-                navArgument("bill") { type = NavType.IntType }
-            )
-        ) { backStackEntry ->
-            val service = URLDecoder.decode(
-                backStackEntry.arguments?.getString("service") ?: "",
-                StandardCharsets.UTF_8.toString()
-            )
-            val date = URLDecoder.decode(
-                backStackEntry.arguments?.getString("date") ?: "",
-                StandardCharsets.UTF_8.toString()
-            )
-            val time = URLDecoder.decode(
-                backStackEntry.arguments?.getString("time") ?: "",
-                StandardCharsets.UTF_8.toString()
-            )
-            val bill = backStackEntry.arguments?.getInt("bill") ?: 0
-
-            PaymentScreen(
-                serviceName = service,
-                selectedDate = date,
-                selectedTime = time,
-                bill = bill,
-                onBack = { navController.popBackStack() },
-                onCancel = {
-                    navController.navigate("main") {
-                        popUpTo("main") { inclusive = true }
-                    }
-                },
-                onPay = {
-                    val encodedService = URLEncoder.encode(service, StandardCharsets.UTF_8.toString())
-                    val encodedDate = URLEncoder.encode(date, StandardCharsets.UTF_8.toString())
-                    val encodedTime = URLEncoder.encode(time, StandardCharsets.UTF_8.toString())
-                    navController.navigate("booking_success/$encodedService/$encodedDate/$encodedTime/$bill")
-                },
-                sharedViewModel = sharedViewModel
-            )
+        composable("select_service") {
+            SelectServiceScreen(navController = navController, sharedViewModel = sharedViewModel)
         }
-
-        composable(
-            "booking_success/{service}/{date}/{time}/{bill}",
-            arguments = listOf(
-                navArgument("service") { type = NavType.StringType },
-                navArgument("date") { type = NavType.StringType },
-                navArgument("time") { type = NavType.StringType },
-                navArgument("bill") { type = NavType.IntType }
-            )
-        ) { backStackEntry ->
-            val service = URLDecoder.decode(
-                backStackEntry.arguments?.getString("service") ?: "",
-                StandardCharsets.UTF_8.toString()
-            )
-            val date = URLDecoder.decode(
-                backStackEntry.arguments?.getString("date") ?: "",
-                StandardCharsets.UTF_8.toString()
-            )
-            val time = URLDecoder.decode(
-                backStackEntry.arguments?.getString("time") ?: "",
-                StandardCharsets.UTF_8.toString()
-            )
-            val bill = backStackEntry.arguments?.getInt("bill") ?: 0
-
-            BookingSuccessScreen(
-                serviceName = service,
-                selectedDate = date,
-                selectedTime = time,
-                bill = bill,
-                onFinish = {
-                    navController.navigate("main") {
-                        popUpTo("main") { inclusive = true }
-                    }
-                },
-                sharedViewModel = sharedViewModel
-            )
-        }
-
-        composable("profile") {
-            ProfileScreen(
-                navController = navController,
-                sharedViewModel = sharedViewModel
-            )
-        }
-
-        composable("edit_profile") {
-            EditProfileScreen(
-                onBack = { navController.popBackStack() },
-                onSubmit = { navController.popBackStack() },
-                sharedViewModel = sharedViewModel
-            )
-        }
-
         composable("tracking_booking") {
-            TrackingBookingScreen(
-                navController = navController,
-                sharedViewModel = sharedViewModel
-            )
+            TrackingBookingScreen(navController = navController, sharedViewModel = sharedViewModel)
+        }
+        composable("main") {
+            MainScreen(navController = navController, sharedViewModel = sharedViewModel)
         }
     }
 } 

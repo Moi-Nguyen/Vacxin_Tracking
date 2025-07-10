@@ -16,7 +16,8 @@ data class AppointmentState(
     val insuranceId: String = "",
     val isLoading: Boolean = false,
     val error: String? = null,
-    val message: String? = null
+    val message: String? = null,
+    val history: List<com.uth.vactrack.data.model.BookingDetail> = emptyList()
 )
 
 class AppointmentViewModel : ViewModel() {
@@ -55,8 +56,8 @@ class AppointmentViewModel : ViewModel() {
     fun isFormValid(): Boolean {
         val currentState = _state.value
         return currentState.name.isNotBlank() &&
-                currentState.birthday.isNotBlank() && isBirthdayValid() &&
-                currentState.phone.isNotBlank() && isPhoneValid() &&
+                currentState.birthday.matches(Regex("""^\d{2}/\d{2}/\d{4}$""")) &&
+                currentState.phone.length in 10..12 && currentState.phone.all { it.isDigit() } &&
                 currentState.insuranceId.isNotBlank()
     }
 
@@ -92,6 +93,17 @@ class AppointmentViewModel : ViewModel() {
                 _state.value.copy(isLoading = false, message = result.getOrNull()?.message)
             } else {
                 _state.value.copy(isLoading = false, error = result.exceptionOrNull()?.message ?: "Booking failed")
+            }
+        }
+    }
+
+    fun fetchBookingHistory(token: String, userId: String) {
+        viewModelScope.launch {
+            val result = repository.getBookingHistory(token, userId)
+            if (result.isSuccess) {
+                _state.value = _state.value.copy(history = result.getOrNull() ?: emptyList())
+            } else {
+                _state.value = _state.value.copy(history = emptyList())
             }
         }
     }

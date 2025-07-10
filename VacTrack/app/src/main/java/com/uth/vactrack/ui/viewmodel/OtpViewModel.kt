@@ -2,17 +2,13 @@ package com.uth.vactrack.ui.viewmodel
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.uth.vactrack.config.AppConfig
+import com.uth.vactrack.data.repository.AuthRepository
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
-import org.json.JSONObject
-import java.net.HttpURLConnection
-import java.net.URL
 
 // State cho OTP
-
 data class OtpState(
     val isLoading: Boolean = false,
     val otp: String = "",
@@ -24,6 +20,8 @@ data class OtpState(
 class OtpViewModel : ViewModel() {
     private val _state = MutableStateFlow(OtpState())
     val state: StateFlow<OtpState> = _state.asStateFlow()
+    
+    private val authRepository = AuthRepository()
 
     fun setOtp(otp: String) {
         _state.value = _state.value.copy(otp = otp)
@@ -32,46 +30,48 @@ class OtpViewModel : ViewModel() {
     fun verifyOtp(email: String) {
         val otp = _state.value.otp
         println("DEBUG OTP: '$otp', EMAIL: '$email'")
-        // Nếu người dùng nhập từng ký tự, cần join lại (nếu truyền vào là List)
-        // Ở đây giả sử otp là String đã join, nếu không thì cần sửa ở UI truyền vào setOtp(otpInputs.joinToString(""))
+        
         if (otp.length != 6) {
             _state.value = _state.value.copy(error = "OTP phải đủ 6 ký tự")
             return
         }
+        
         _state.value = _state.value.copy(isLoading = true, error = null, success = false)
+        
         viewModelScope.launch {
             try {
-                val url = URL("${AppConfig.BASE_URL}/api/auth/verify-otp")
-                println("DEBUG URL: $url")
-                val conn = url.openConnection() as HttpURLConnection
-                conn.requestMethod = "POST"
-                conn.setRequestProperty("Content-Type", "application/json")
-                conn.doOutput = true
-                val body = JSONObject().apply {
-                    put("email", email)
-                    put("otp", otp)
-                }.toString()
-                conn.outputStream.use { it.write(body.toByteArray()) }
-                val response = conn.inputStream.bufferedReader().readText()
-                println("DEBUG RESPONSE: $response")
-                println("DEBUG STATUS: ${conn.responseCode}")
-                val json = JSONObject(response)
-                if (conn.responseCode == 200) {
-                    _state.value = _state.value.copy(
-                        isLoading = false,
-                        resetToken = json.getString("resetToken"),
-                        success = true
-                    )
-                } else {
-                    val errMsg = json.optString("error", "OTP không hợp lệ")
-                    _state.value = _state.value.copy(
-                        isLoading = false,
-                        error = errMsg,
-                        success = false
-                    )
-                }
+                val result = authRepository.verifyOtp(email, otp)
+                result.fold(
+                    onSuccess = { resetTokenOrMessage ->
+                        println("DEBUG OTP SUCCESS: $resetTokenOrMessage")
+                        // Nếu API trả về resetToken thì dùng, không thì tạo tạm thời
+                        val token = if (resetTokenOrMessage.startsWith("temp_token_") || resetTokenOrMessage.length > 20) {
+                            resetTokenOrMessage
+                        } else {
+                            "temp_token_$email"
+                        }
+                        _state.value = _state.value.copy(
+                            isLoading = false,
+                            resetToken = token,
+                            success = true
+                        )
+                    },
+                    onFailure = { exception ->
+                        println("DEBUG OTP ERROR: ${exception.message}")
+                        _state.value = _state.value.copy(
+                            isLoading = false,
+                            error = exception.message ?: "OTP không hợp lệ",
+                            success = false
+                        )
+                    }
+                )
             } catch (e: Exception) {
-                _state.value = _state.value.copy(isLoading = false, error = e.localizedMessage ?: "Lỗi xác thực OTP", success = false)
+                println("DEBUG OTP EXCEPTION: ${e.message}")
+                _state.value = _state.value.copy(
+                    isLoading = false, 
+                    error = e.localizedMessage ?: "Lỗi xác thực OTP", 
+                    success = false
+                )
             }
         }
     }
@@ -79,6 +79,7 @@ class OtpViewModel : ViewModel() {
     fun clearError() {
         _state.value = _state.value.copy(error = null)
     }
+    
     fun resetSuccess() {
         _state.value = _state.value.copy(success = false, resetToken = null)
     }

@@ -25,6 +25,9 @@ import com.uth.vactrack.ui.viewmodel.PaymentViewModel
 import com.uth.vactrack.ui.viewmodel.SharedViewModel
 import com.uth.vactrack.ui.UIUser.BottomNavigationBar
 import java.net.URLEncoder
+import android.util.Log
+import androidx.navigation.NavController
+import androidx.navigation.compose.rememberNavController
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -33,21 +36,25 @@ fun PaymentScreen(
     selectedDate: String,
     selectedTime: String,
     bill: Int,
+    navController: NavController,
     onBack: () -> Unit = {},
     onCancel: () -> Unit = {},
     onPay: () -> Unit = {},
     paymentViewModel: PaymentViewModel = viewModel(),
-    sharedViewModel: SharedViewModel = viewModel()
+    sharedViewModel: SharedViewModel
 ) {
     val context = LocalContext.current
     val state by paymentViewModel.state.collectAsStateWithLifecycle()
+    // val navController = androidx.navigation.compose.rememberNavController() // XÓA DÒNG NÀY
 
     // Handle success
     LaunchedEffect(state.success) {
         if (state.success) {
             Toast.makeText(context, state.message ?: "Thanh toán thành công", Toast.LENGTH_SHORT).show()
             paymentViewModel.resetSuccess()
-            onPay()
+            navController.navigate("home") {
+                popUpTo(0)
+            }
         }
     }
 
@@ -159,7 +166,8 @@ fun PaymentScreen(
                         )
                         Spacer(modifier = Modifier.width(16.dp))
                         Column {
-                            Text("Nguyen Van A", fontWeight = FontWeight.Bold, fontSize = 20.sp, color = MaterialTheme.colorScheme.onSurface)
+                            val userName = user?.fullName ?: user?.name ?: "Guest"
+                            Text(userName, fontWeight = FontWeight.Bold, fontSize = 20.sp, color = MaterialTheme.colorScheme.onSurface)
                             Text("Service: $serviceName", fontSize = 16.sp, color = MaterialTheme.colorScheme.onSurface)
                             Text("Facility: Gia Dinh Hospital", fontSize = 16.sp, color = MaterialTheme.colorScheme.onSurface)
                             Spacer(modifier = Modifier.height(8.dp))
@@ -219,6 +227,8 @@ fun PaymentScreen(
                         val safeToken = token
                         val safeServiceId = serviceId
                         val safeFacilityId = facilityId
+                        Log.d("DEBUG_BOOKING", "user=$user, token=$safeToken, serviceId=$safeServiceId, facilityId=$safeFacilityId")
+                        Toast.makeText(context, "user=$user\ntoken=$safeToken\nserviceId=$safeServiceId\nfacilityId=$safeFacilityId", Toast.LENGTH_LONG).show()
                         if (user != null && !safeToken.isNullOrBlank() && !safeServiceId.isNullOrBlank() && !safeFacilityId.isNullOrBlank()) {
                             val bookingRequest = com.uth.vactrack.data.model.BookingRequest(
                                 userId = user.id,
@@ -232,6 +242,8 @@ fun PaymentScreen(
                             paymentViewModel.bookAppointment(safeToken, bookingRequest) {
                                 // Xử lý kết quả nếu cần
                             }
+                        } else {
+                            Toast.makeText(context, "Thiếu thông tin đặt lịch!", Toast.LENGTH_SHORT).show()
                         }
                     },
                     modifier = Modifier.weight(2f),

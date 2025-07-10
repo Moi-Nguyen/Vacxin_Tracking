@@ -31,7 +31,7 @@ fun SelectServiceScreen(
     navController: NavController,
     onBack: () -> Unit = {},
     serviceViewModel: ServiceViewModel = viewModel(),
-    sharedViewModel: SharedViewModel = viewModel()
+    sharedViewModel: SharedViewModel
 ) {
     val serviceState by serviceViewModel.serviceState.collectAsStateWithLifecycle()
     val sharedState by sharedViewModel.sharedState.collectAsStateWithLifecycle()
@@ -86,12 +86,9 @@ fun SelectServiceScreen(
                         .background(MaterialTheme.colorScheme.surfaceVariant)
                 )
                 Spacer(modifier = Modifier.width(12.dp))
-                Text(
-                    sharedState.currentUser?.name ?: "User",
-                    fontWeight = FontWeight.Bold,
-                    fontSize = 16.sp,
-                    color = MaterialTheme.colorScheme.onBackground
-                )
+                val userName = sharedState.currentUser?.name ?: "User"
+                println("DEBUG USER IN SelectServiceScreen: ${sharedState.currentUser}")
+                Text(userName, fontWeight = FontWeight.Bold, fontSize = 20.sp)
             }
 
             // Progress

@@ -137,7 +137,7 @@ fun MainScreen(
                 onTabSelected = { idx ->
                     selectedTab = idx
                     when (idx) {
-                        0 -> navController.navigate("main")
+                        0 -> navController.navigate("home")
                         1 -> navController.navigate("appointment")
                         2 -> {/* TODO: navController.navigate("log") */}
                         3 -> navController.navigate("profile")

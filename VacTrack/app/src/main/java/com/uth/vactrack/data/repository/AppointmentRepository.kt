@@ -187,4 +187,44 @@ class AppointmentRepository {
             Result.failure(e)
         }
     }
+
+    suspend fun getBookingHistory(token: String, userId: String): Result<List<com.uth.vactrack.data.model.BookingDetail>> {
+        return try {
+            val url = URL("${AppConfig.BASE_URL}/api/booking/user/$userId")
+            val conn = url.openConnection() as HttpURLConnection
+            conn.requestMethod = "GET"
+            conn.setRequestProperty("Authorization", "Bearer $token")
+            conn.setRequestProperty("Content-Type", "application/json")
+            val response = conn.inputStream.bufferedReader().readText()
+            val json = org.json.JSONObject(response)
+            if (conn.responseCode == 200 && json.optBoolean("success", false)) {
+                val bookingsArray = json.getJSONArray("bookings")
+                val bookings = mutableListOf<com.uth.vactrack.data.model.BookingDetail>()
+                for (i in 0 until bookingsArray.length()) {
+                    val bookingJson = bookingsArray.getJSONObject(i)
+                    bookings.add(
+                        com.uth.vactrack.data.model.BookingDetail(
+                            id = bookingJson.optString("id", ""),
+                            userId = bookingJson.optString("userId", ""),
+                            serviceId = bookingJson.optString("serviceId", ""),
+                            facilityId = bookingJson.optString("facilityId", ""),
+                            facilityName = bookingJson.optString("facilityName", null),
+                            date = bookingJson.optString("date", ""),
+                            time = bookingJson.optString("time", ""),
+                            status = bookingJson.optString("status", ""),
+                            doseNumber = bookingJson.optInt("doseNumber", 1),
+                            price = bookingJson.optInt("price", 0),
+                            paymentStatus = bookingJson.optString("paymentStatus", null),
+                            doctorName = bookingJson.optString("doctorName", null)
+                        )
+                    )
+                }
+                Result.success(bookings)
+            } else {
+                Result.success(emptyList())
+            }
+        } catch (e: Exception) {
+            Result.failure(e)
+        }
+    }
 } 

@@ -23,10 +23,13 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import com.uth.vactrack.R
 import com.uth.vactrack.ui.viewmodel.BookingSuccessViewModel
 import com.uth.vactrack.ui.viewmodel.SharedViewModel
+import androidx.navigation.NavController
+import androidx.navigation.compose.rememberNavController
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun BookingSuccessScreen(
+    navController: NavController,
     serviceName: String,
     selectedDate: String,
     selectedTime: String,
@@ -34,7 +37,7 @@ fun BookingSuccessScreen(
     onBack: () -> Unit = {},
     onFinish: () -> Unit = {},
     bookingSuccessViewModel: BookingSuccessViewModel = viewModel(),
-    sharedViewModel: SharedViewModel = viewModel()
+    sharedViewModel: SharedViewModel
 ) {
     val state by bookingSuccessViewModel.state.collectAsStateWithLifecycle()
 

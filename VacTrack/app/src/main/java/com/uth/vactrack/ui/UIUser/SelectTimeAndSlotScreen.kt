@@ -38,6 +38,8 @@ fun SelectTimeAndSlotScreen(
 ) {
     val state by viewModel.state.collectAsStateWithLifecycle()
     val user = sharedViewModel.sharedState.collectAsStateWithLifecycle().value.currentUser
+    val userName = user?.name ?: "Guest"
+    println("DEBUG USER IN SelectTimeAndSlotScreen: $user")
 
     Scaffold(
         topBar = {
@@ -104,7 +106,7 @@ fun SelectTimeAndSlotScreen(
                         )
                         Spacer(modifier = Modifier.width(12.dp))
                         Column {
-                            Text(user?.name ?: "Guest", fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.onSurface)
+                            Text(userName, fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.onSurface)
                             Text("Service: $serviceName", color = MaterialTheme.colorScheme.onSurface)
                             Text("Facility: Gia Dinh Hospital", color = MaterialTheme.colorScheme.onSurface)
                         }

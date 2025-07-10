@@ -26,9 +26,7 @@ class MainActivity : ComponentActivity() {
             val sharedState by sharedViewModel.sharedState.collectAsStateWithLifecycle()
 
             VacTrackTheme(darkTheme = sharedState.isDarkTheme) {
-                AppNavHost(
-                    startDestination = startDestination
-                )
+                AppNavHost()
             }
         }
     }

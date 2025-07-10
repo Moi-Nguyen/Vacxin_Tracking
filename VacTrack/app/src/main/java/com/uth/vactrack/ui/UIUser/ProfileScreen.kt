@@ -35,7 +35,7 @@ import coil.compose.AsyncImage
 fun ProfileScreen(
     navController: NavController = rememberNavController(),
     onBack: () -> Unit = { navController.popBackStack() },
-    sharedViewModel: SharedViewModel = viewModel()
+    sharedViewModel: SharedViewModel
 ) {
     val context = LocalContext.current
     val sharedState by sharedViewModel.sharedState.collectAsStateWithLifecycle()
@@ -92,6 +92,7 @@ fun ProfileScreen(
                 modifier = Modifier.fillMaxWidth()
             ) {
                 val user = sharedState.currentUser
+                println("DEBUG USER IN UI: $user")
                 val avatarUrl = user?.photoUrl
                 if (!avatarUrl.isNullOrBlank()) {
                     AsyncImage(
@@ -112,15 +113,22 @@ fun ProfileScreen(
                 }
                 Spacer(modifier = Modifier.height(12.dp))
                 Text(
-                    user?.name ?: "User", 
-                    fontWeight = FontWeight.Bold, 
+                    user?.fullName ?: user?.name ?: "User",
+                    fontWeight = FontWeight.Bold,
                     fontSize = 20.sp
                 )
-                Text(
-                    "${user?.email ?: "email@example.com"} | ${user?.phone ?: "0123456789"}", 
-                    fontSize = 14.sp, 
-                    color = Color.Gray
-                )
+                if (!user?.email.isNullOrBlank()) {
+                    Text(user.email, fontSize = 14.sp, color = Color.Gray)
+                }
+                if (!user?.phone.isNullOrBlank()) {
+                    Text(user.phone, fontSize = 14.sp, color = Color.Gray)
+                }
+                if (!user?.address.isNullOrBlank()) {
+                    Text(user.address ?: "", fontSize = 13.sp, color = Color.Gray)
+                }
+                if (!user?.dob.isNullOrBlank()) {
+                    Text("DOB: ${user.dob}", fontSize = 13.sp, color = Color.Gray)
+                }
             }
 
             Spacer(modifier = Modifier.height(24.dp))

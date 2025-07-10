@@ -32,7 +32,7 @@ fun AppointmentScreen(
     navController: NavController,
     onBack: () -> Unit = { navController.popBackStack() },
     appointmentViewModel: AppointmentViewModel = viewModel(),
-    sharedViewModel: SharedViewModel = viewModel()
+    sharedViewModel: SharedViewModel
 ) {
     val state by appointmentViewModel.state.collectAsStateWithLifecycle()
     val context = LocalContext.current
@@ -42,6 +42,13 @@ fun AppointmentScreen(
     val appointmentHistory = listOf(1)
     val sharedState = sharedViewModel.sharedState.collectAsStateWithLifecycle().value
     val token = sharedState.token
+
+    // Fetch booking history khi user đã đăng nhập và có token
+    LaunchedEffect(user, token) {
+        if (user != null && !token.isNullOrBlank()) {
+            appointmentViewModel.fetchBookingHistory(token, user.id)
+        }
+    }
 
     Scaffold(
         topBar = {
@@ -121,8 +128,14 @@ fun AppointmentScreen(
             }
 
             item { SectionTitle("Appointment History:") }
-            items(appointmentHistory) {
-                AppointmentHistoryCard()
+            if (state.history.isNotEmpty()) {
+                items(state.history) { booking ->
+                    AppointmentHistoryCard(booking)
+                }
+            } else {
+                item {
+                    Text("No appointment history.", color = Color.Gray, modifier = Modifier.padding(8.dp))
+                }
             }
             item { Spacer(modifier = Modifier.height(80.dp)) }
         }
@@ -273,7 +286,7 @@ fun ContinueButton(enabled: Boolean, onClick: () -> Unit) {
 }
 
 @Composable
-fun AppointmentHistoryCard() {
+fun AppointmentHistoryCard(booking: com.uth.vactrack.data.model.BookingDetail) {
     Card(
         modifier = Modifier
             .fillMaxWidth()
@@ -292,12 +305,12 @@ fun AppointmentHistoryCard() {
             )
             Spacer(modifier = Modifier.height(8.dp))
             Text(
-                "COVID-19 Vaccine - Gia Dinh Hospital",
+                "${booking.serviceId} - ${booking.facilityName ?: booking.facilityId}",
                 fontSize = 14.sp,
                 color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.7f)
             )
             Text(
-                "Completed on March 15, 2024",
+                "Completed on ${booking.date} ${booking.time}",
                 fontSize = 12.sp,
                 color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.5f)
             )

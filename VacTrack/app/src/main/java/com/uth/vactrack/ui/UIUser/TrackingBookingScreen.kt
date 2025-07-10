@@ -24,6 +24,7 @@ import androidx.compose.ui.unit.sp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
+import androidx.navigation.compose.rememberNavController
 import com.uth.vactrack.R
 import com.uth.vactrack.ui.viewmodel.SharedViewModel
 import com.uth.vactrack.ui.viewmodel.TrackingBookingViewModel
@@ -31,9 +32,9 @@ import com.uth.vactrack.ui.viewmodel.TrackingBookingViewModel
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun TrackingBookingScreen(
-    navController: NavController,
+    navController: NavController = rememberNavController(),
     trackingBookingViewModel: TrackingBookingViewModel = viewModel(),
-    sharedViewModel: SharedViewModel = viewModel()
+    sharedViewModel: SharedViewModel
 ) {
     val state by trackingBookingViewModel.state.collectAsStateWithLifecycle()
 

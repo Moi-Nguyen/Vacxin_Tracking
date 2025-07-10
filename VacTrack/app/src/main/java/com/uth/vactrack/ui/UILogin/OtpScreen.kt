@@ -139,7 +139,9 @@ fun OtpScreen(
                                 val newInputs = otpInputs.toMutableList()
                                 newInputs[i] = newValue
                                 otpInputs = newInputs
-                                viewModel.setOtp(otpInputs.joinToString(""))
+                                val fullOtp = otpInputs.joinToString("")
+                                println("DEBUG OTP INPUT: $fullOtp")
+                                viewModel.setOtp(fullOtp)
                                 if (newValue.isNotEmpty() && i < otpLength - 1) {
                                     focusRequesters[i + 1].requestFocus()
                                 }
@@ -170,7 +172,12 @@ fun OtpScreen(
             }
             Spacer(modifier = Modifier.height(24.dp))
             Button(
-                onClick = { viewModel.verifyOtp(email) },
+                onClick = { 
+                    println("DEBUG VERIFY BUTTON CLICKED")
+                    println("DEBUG EMAIL: $email")
+                    println("DEBUG OTP INPUTS: $otpInputs")
+                    viewModel.verifyOtp(email) 
+                },
                 modifier = Modifier
                     .fillMaxWidth()
                     .height(48.dp),

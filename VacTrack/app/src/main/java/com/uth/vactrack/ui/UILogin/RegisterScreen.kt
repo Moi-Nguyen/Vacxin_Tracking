@@ -40,7 +40,7 @@ fun RegisterScreen(
     onRegisterSuccess: () -> Unit = {},
     onBack: () -> Unit = {},
     authViewModel: AuthViewModel = viewModel(),
-    sharedViewModel: SharedViewModel = viewModel()
+    sharedViewModel: SharedViewModel
 ) {
     val context = LocalContext.current
     val focusManager = LocalFocusManager.current
