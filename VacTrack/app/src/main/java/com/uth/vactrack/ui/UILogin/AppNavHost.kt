@@ -22,23 +22,81 @@ fun AppNavHost(
         composable("login") {
             LoginScreen(
                 onLoginSuccess = { navController.navigate("home") },
+                onSignUpClick = { navController.navigate("register") },
+                onForgotPassword = { email -> navController.navigate("forgot_password") },
                 sharedViewModel = sharedViewModel
             )
         }
         composable("register") {
-            RegisterScreen(sharedViewModel = sharedViewModel)
+            RegisterScreen(
+                onBack = { navController.popBackStack() },
+                sharedViewModel = sharedViewModel
+            )
+        }
+        composable("forgot_password") {
+            ForgotPasswordScreen(
+                onBack = { navController.popBackStack() },
+                onRequestResetSuccess = { email -> 
+                    val encodedEmail = URLEncoder.encode(email, StandardCharsets.UTF_8.toString())
+                    navController.navigate("otp/$encodedEmail")
+                }
+            )
+        }
+        composable(
+            "otp/{email}",
+            arguments = listOf(
+                navArgument("email") { type = NavType.StringType }
+            )
+        ) { backStackEntry ->
+            val email = backStackEntry.arguments?.getString("email") ?: ""
+            val decodedEmail = URLDecoder.decode(email, StandardCharsets.UTF_8.toString())
+            OtpScreen(
+                email = decodedEmail,
+                onOtpVerified = { resetToken -> 
+                    val encodedToken = URLEncoder.encode(resetToken, StandardCharsets.UTF_8.toString())
+                    navController.navigate("set_new_password/$encodedToken")
+                },
+                onResend = { /* TODO: Handle resend */ },
+                onBack = { navController.popBackStack() }
+            )
+        }
+        composable(
+            "set_new_password/{resetToken}",
+            arguments = listOf(
+                navArgument("resetToken") { type = NavType.StringType }
+            )
+        ) { backStackEntry ->
+            val resetToken = backStackEntry.arguments?.getString("resetToken") ?: ""
+            val decodedToken = URLDecoder.decode(resetToken, StandardCharsets.UTF_8.toString())
+            SetNewPasswordScreen(
+                resetToken = decodedToken,
+                onPasswordReset = { navController.navigate("login") },
+                onBack = { navController.popBackStack() }
+            )
         }
         composable("profile") {
-            ProfileScreen(navController = navController, sharedViewModel = sharedViewModel)
+            ProfileScreen(
+                onBack = { navController.popBackStack() },
+                navController = navController, 
+                sharedViewModel = sharedViewModel
+            )
         }
         composable("edit_profile") {
-            EditProfileScreen(navController = navController, sharedViewModel = sharedViewModel)
+            EditProfileScreen(
+                onBack = { navController.popBackStack() },
+                navController = navController, 
+                sharedViewModel = sharedViewModel
+            )
         }
         composable("home") {
             HomeScreen(navController = navController, sharedViewModel = sharedViewModel)
         }
         composable("appointment") {
-            AppointmentScreen(navController = navController, sharedViewModel = sharedViewModel)
+            AppointmentScreen(
+                onBack = { navController.popBackStack() },
+                navController = navController, 
+                sharedViewModel = sharedViewModel
+            )
         }
         composable(
             "booking_success/{serviceName}/{selectedDate}/{selectedTime}/{bill}",
@@ -58,6 +116,7 @@ fun AppNavHost(
                 selectedDate = selectedDate,
                 selectedTime = selectedTime,
                 bill = bill,
+                onBack = { navController.popBackStack() },
                 navController = navController,
                 sharedViewModel = sharedViewModel
             )
@@ -80,6 +139,7 @@ fun AppNavHost(
                 selectedDate = selectedDate,
                 selectedTime = selectedTime,
                 bill = bill,
+                onBack = { navController.popBackStack() },
                 navController = navController,
                 sharedViewModel = sharedViewModel
             )
@@ -96,12 +156,17 @@ fun AppNavHost(
             SelectTimeAndSlotScreen(
                 serviceName = serviceName,
                 bill = bill,
+                onBack = { navController.popBackStack() },
                 navController = navController,
                 sharedViewModel = sharedViewModel
             )
         }
         composable("select_service") {
-            SelectServiceScreen(navController = navController, sharedViewModel = sharedViewModel)
+            SelectServiceScreen(
+                onBack = { navController.popBackStack() },
+                navController = navController, 
+                sharedViewModel = sharedViewModel
+            )
         }
         composable("tracking_booking") {
             TrackingBookingScreen(navController = navController, sharedViewModel = sharedViewModel)
