@@ -32,6 +32,10 @@ const vaccineSchema = new mongoose.Schema({
         required: true,
         default: 0
     },
+    price: {
+        type: Number,
+        default: 0
+    },
     sideEffects: [{
         type: String
     }],

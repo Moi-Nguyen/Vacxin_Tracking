@@ -1,0 +1,838 @@
+# VacTrack API Documentation - Complete Guide
+
+## Table of Contents
+1. [Authentication APIs](#authentication-apis)
+2. [User Management APIs](#user-management-apis)
+3. [Vaccine Management APIs](#vaccine-management-apis)
+4. [Vaccination History APIs](#vaccination-history-apis)
+5. [Booking APIs](#booking-apis)
+6. [Facility Management APIs](#facility-management-apis)
+7. [Doctor Management APIs](#doctor-management-apis)
+8. [Error Responses](#error-responses)
+
+---
+
+## Authentication APIs
+
+### 1. User Registration
+**Endpoint:** `POST /api/auth/register`  
+**Description:** Đăng ký tài khoản mới
+
+**Request Body:**
+```json
+{
+  "email": "user@example.com",
+  "password": "password123",
+  "name": "John Doe",
+  "fullName": "John Doe",
+  "age": 25,
+  "dob": "1999-01-01",
+  "address": "123 Street, District 1, HCMC",
+  "phone": "0123456789",
+  "role": "user"
+}
+```
+
+**Response (Success - 201):**
+```json
+{
+  "message": "User registered successfully",
+  "token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...",
+  "user": {
+    "id": "64f8a1b2c3d4e5f6a7b8c9d0",
+    "email": "user@example.com",
+    "name": "John Doe",
+    "role": "user"
+  }
+}
+```
+
+### 2. User Login
+**Endpoint:** `POST /api/auth/login`  
+**Description:** Đăng nhập với email và password
+
+**Request Body:**
+```json
+{
+  "email": "user@example.com",
+  "password": "password123"
+}
+```
+
+**Response (Success - 200):**
+```json
+{
+  "message": "Login successful",
+  "token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...",
+  "user": {
+    "id": "64f8a1b2c3d4e5f6a7b8c9d0",
+    "email": "user@example.com",
+    "name": "John Doe",
+    "role": "user"
+  }
+}
+```
+
+### 3. Request Password Reset
+**Endpoint:** `POST /api/auth/request-reset`  
+**Description:** Gửi OTP để đặt lại mật khẩu
+
+**Request Body:**
+```json
+{
+  "email": "user@example.com"
+}
+```
+
+**Response (Success - 200):**
+```json
+{
+  "message": "OTP sent to your email"
+}
+```
+
+### 4. Verify OTP
+**Endpoint:** `POST /api/auth/verify-otp`  
+**Description:** Xác thực OTP và nhận mật khẩu mới
+
+**Request Body:**
+```json
+{
+  "email": "user@example.com",
+  "otp": "123456"
+}
+```
+
+**Response (Success - 200):**
+```json
+{
+  "message": "New password has been sent to your email"
+}
+```
+
+**Response (Error - 400):**
+```json
+{
+  "error": "Invalid OTP"
+}
+```
+
+### 5. Set New Password
+**Endpoint:** `POST /api/auth/set-new-password`  
+**Headers:** `Authorization: Bearer reset_token`  
+**Description:** Đặt mật khẩu mới sau khi xác thực OTP
+
+**Request Body:**
+```json
+{
+  "newPassword": "newSecurePassword123"
+}
+```
+
+**Response (Success - 200):**
+```json
+{
+  "message": "Password has been reset successfully"
+}
+```
+
+### 6. Change Password
+**Endpoint:** `POST /api/auth/change-password`  
+**Headers:** `Authorization: Bearer token`  
+**Description:** Đổi mật khẩu khi đã đăng nhập
+
+**Request Body:**
+```json
+{
+  "currentPassword": "old_password",
+  "newPassword": "new_password"
+}
+```
+
+**Response (Success - 200):**
+```json
+{
+  "message": "Password changed successfully"
+}
+```
+
+### 7. Update Profile
+**Endpoint:** `PUT /api/auth/profile`  
+**Headers:** `Authorization: Bearer token`  
+**Description:** Cập nhật thông tin cá nhân
+
+**Request Body:**
+```json
+{
+  "fullName": "John Doe Updated",
+  "age": 26,
+  "dob": "1998-01-01",
+  "address": "456 New Street, District 2, HCMC",
+  "phone": "0987654321"
+}
+```
+
+**Response (Success - 200):**
+```json
+{
+  "message": "Profile updated successfully",
+  "user": {
+    "id": "64f8a1b2c3d4e5f6a7b8c9d0",
+    "email": "user@example.com",
+    "name": "John Doe",
+    "fullName": "John Doe Updated",
+    "age": 26,
+    "dob": "1998-01-01T00:00:00.000Z",
+    "address": "456 New Street, District 2, HCMC",
+    "phone": "0987654321",
+    "role": "user"
+  }
+}
+```
+
+---
+
+## User Management APIs
+
+### 1. Create User (Admin Only)
+**Endpoint:** `POST /api/auth/create-user`  
+**Headers:** `Authorization: Bearer admin_token`  
+**Description:** Tạo user mới (chỉ admin)
+
+**Request Body:**
+```json
+{
+  "email": "newuser@example.com",
+  "password": "password123",
+  "name": "New User",
+  "fullName": "New User Full Name",
+  "age": 30,
+  "dob": "1994-01-01",
+  "address": "789 User Street, District 3, HCMC",
+  "phone": "0123456789",
+  "role": "user"
+}
+```
+
+**Response (Success - 201):**
+```json
+{
+  "message": "User created successfully",
+  "user": {
+    "id": "64f8a1b2c3d4e5f6a7b8c9d1",
+    "email": "newuser@example.com",
+    "name": "New User",
+    "role": "user",
+    "fullName": "New User Full Name",
+    "age": 30,
+    "dob": "1994-01-01T00:00:00.000Z",
+    "address": "789 User Street, District 3, HCMC",
+    "phone": "0123456789"
+  }
+}
+```
+
+### 2. Update User (Admin Only)
+**Endpoint:** `PUT /api/auth/users/:userId`  
+**Headers:** `Authorization: Bearer admin_token`  
+**Description:** Cập nhật thông tin user (chỉ admin)
+
+**Request Body:**
+```json
+{
+  "fullName": "Updated User Name",
+  "age": 31,
+  "dob": "1993-01-01",
+  "address": "Updated Address",
+  "phone": "0987654321",
+  "email": "updated@example.com",
+  "role": "doctor"
+}
+```
+
+**Response (Success - 200):**
+```json
+{
+  "message": "User information updated successfully",
+  "user": {
+    "id": "64f8a1b2c3d4e5f6a7b8c9d1",
+    "email": "updated@example.com",
+    "name": "New User",
+    "role": "doctor",
+    "fullName": "Updated User Name",
+    "age": 31,
+    "dob": "1993-01-01T00:00:00.000Z",
+    "address": "Updated Address",
+    "phone": "0987654321"
+  }
+}
+```
+
+### 3. Get All Users (Admin Only)
+**Endpoint:** `GET /api/auth/users`  
+**Headers:** `Authorization: Bearer admin_token`  
+**Query Parameters:**
+- `search`: Tìm kiếm theo tên hoặc email
+- `role`: Lọc theo role (admin, doctor, user)
+- `page`: Số trang (default: 1)
+- `limit`: Số item mỗi trang (default: 10)
+
+**Response (Success - 200):**
+```json
+{
+  "users": [
+    {
+      "id": "64f8a1b2c3d4e5f6a7b8c9d0",
+      "email": "user@example.com",
+      "name": "John Doe",
+      "role": "user",
+      "fullName": "John Doe",
+      "age": 25,
+      "dob": "1999-01-01T00:00:00.000Z",
+      "address": "123 Street, District 1, HCMC",
+      "phone": "0123456789"
+    }
+  ],
+  "total": 100,
+  "totalPages": 10,
+  "currentPage": 1
+}
+```
+
+### 4. Get All Users No Paging (Admin Only)
+**Endpoint:** `GET /api/auth/users/all`  
+**Headers:** `Authorization: Bearer admin_token`  
+**Description:** Lấy tất cả users không phân trang
+
+**Response (Success - 200):**
+```json
+[
+  {
+    "id": "64f8a1b2c3d4e5f6a7b8c9d0",
+    "email": "user@example.com",
+    "name": "John Doe",
+    "role": "user",
+    "fullName": "John Doe",
+    "age": 25,
+    "dob": "1999-01-01T00:00:00.000Z",
+    "address": "123 Street, District 1, HCMC",
+    "phone": "0123456789"
+  }
+]
+```
+
+---
+
+## Vaccine Management APIs
+
+### 1. Create Vaccine (Admin Only)
+**Endpoint:** `POST /api/vaccines`  
+**Headers:** `Authorization: Bearer admin_token`  
+**Description:** Tạo vaccine mới
+
+**Request Body:**
+```json
+{
+  "name": "HPV Vaccine",
+  "manufacturer": "Merck",
+  "description": "Vaccine phòng ngừa ung thư cổ tử cung",
+  "dosage": "3 mũi (0, 2, 6 tháng)",
+  "storageTemperature": 2,
+  "shelfLife": 36,
+  "quantity": 100,
+  "price": 500000,
+  "sideEffects": [
+    "Đau tại chỗ tiêm",
+    "Sốt nhẹ",
+    "Mệt mỏi"
+  ],
+  "contraindications": [
+    "Dị ứng với thành phần vaccine",
+    "Đang mang thai"
+  ]
+}
+```
+
+**Response (Success - 201):**
+```json
+{
+  "message": "Vaccine created successfully",
+  "vaccine": {
+    "id": "64f8a1b2c3d4e5f6a7b8c9d2",
+    "name": "HPV Vaccine",
+    "manufacturer": "Merck",
+    "description": "Vaccine phòng ngừa ung thư cổ tử cung",
+    "dosage": "3 mũi (0, 2, 6 tháng)",
+    "storageTemperature": 2,
+    "shelfLife": 36,
+    "quantity": 100,
+    "price": 500000,
+    "sideEffects": ["Đau tại chỗ tiêm", "Sốt nhẹ", "Mệt mỏi"],
+    "contraindications": ["Dị ứng với thành phần vaccine", "Đang mang thai"],
+    "isActive": true,
+    "createdBy": "64f8a1b2c3d4e5f6a7b8c9d0",
+    "createdAt": "2024-01-15T10:30:00.000Z",
+    "updatedAt": "2024-01-15T10:30:00.000Z"
+  }
+}
+```
+
+### 2. Get All Vaccines
+**Endpoint:** `GET /api/vaccines`  
+**Headers:** `Authorization: Bearer token`  
+**Query Parameters:**
+- `search`: Tìm kiếm theo tên hoặc nhà sản xuất
+- `page`: Số trang (default: 1)
+- `limit`: Số item mỗi trang (default: 10)
+
+**Response (Success - 200):**
+```json
+{
+  "vaccines": [
+    {
+      "id": "64f8a1b2c3d4e5f6a7b8c9d2",
+      "name": "HPV Vaccine",
+      "manufacturer": "Merck",
+      "description": "Vaccine phòng ngừa ung thư cổ tử cung",
+      "dosage": "3 mũi (0, 2, 6 tháng)",
+      "storageTemperature": 2,
+      "shelfLife": 36,
+      "quantity": 100,
+      "price": 500000,
+      "sideEffects": ["Đau tại chỗ tiêm", "Sốt nhẹ", "Mệt mỏi"],
+      "contraindications": ["Dị ứng với thành phần vaccine", "Đang mang thai"],
+      "isActive": true,
+      "createdBy": {
+        "id": "64f8a1b2c3d4e5f6a7b8c9d0",
+        "name": "Admin User",
+        "email": "admin@example.com"
+      }
+    }
+  ],
+  "totalPages": 1,
+  "currentPage": 1
+}
+```
+
+### 3. Get Single Vaccine
+**Endpoint:** `GET /api/vaccines/:id`  
+**Headers:** `Authorization: Bearer token`  
+**Description:** Lấy chi tiết vaccine
+
+**Response (Success - 200):**
+```json
+{
+  "id": "64f8a1b2c3d4e5f6a7b8c9d2",
+  "name": "HPV Vaccine",
+  "manufacturer": "Merck",
+  "description": "Vaccine phòng ngừa ung thư cổ tử cung",
+  "dosage": "3 mũi (0, 2, 6 tháng)",
+  "storageTemperature": 2,
+  "shelfLife": 36,
+  "quantity": 100,
+  "price": 500000,
+  "sideEffects": ["Đau tại chỗ tiêm", "Sốt nhẹ", "Mệt mỏi"],
+  "contraindications": ["Dị ứng với thành phần vaccine", "Đang mang thai"],
+  "isActive": true,
+  "createdBy": {
+    "id": "64f8a1b2c3d4e5f6a7b8c9d0",
+    "name": "Admin User",
+    "email": "admin@example.com"
+  },
+  "createdAt": "2024-01-15T10:30:00.000Z",
+  "updatedAt": "2024-01-15T10:30:00.000Z"
+}
+```
+
+### 4. Update Vaccine
+**Endpoint:** `PUT /api/vaccines/:id`  
+**Headers:** `Authorization: Bearer token`  
+**Description:** Cập nhật thông tin vaccine (chỉ người tạo)
+
+**Request Body:**
+```json
+{
+  "name": "HPV Vaccine Updated",
+  "description": "Updated description",
+  "price": 600000,
+  "quantity": 150
+}
+```
+
+**Response (Success - 200):**
+```json
+{
+  "message": "Vaccine updated successfully",
+  "vaccine": {
+    "id": "64f8a1b2c3d4e5f6a7b8c9d2",
+    "name": "HPV Vaccine Updated",
+    "manufacturer": "Merck",
+    "description": "Updated description",
+    "dosage": "3 mũi (0, 2, 6 tháng)",
+    "storageTemperature": 2,
+    "shelfLife": 36,
+    "quantity": 150,
+    "price": 600000,
+    "sideEffects": ["Đau tại chỗ tiêm", "Sốt nhẹ", "Mệt mỏi"],
+    "contraindications": ["Dị ứng với thành phần vaccine", "Đang mang thai"],
+    "isActive": true
+  }
+}
+```
+
+### 5. Delete Vaccine
+**Endpoint:** `DELETE /api/vaccines/:id`  
+**Headers:** `Authorization: Bearer token`  
+**Description:** Xóa vaccine (chỉ người tạo)
+
+**Response (Success - 200):**
+```json
+{
+  "message": "Vaccine deleted successfully"
+}
+```
+
+### 6. Toggle Vaccine Status
+**Endpoint:** `PUT /api/vaccines/:id/toggle`  
+**Headers:** `Authorization: Bearer token`  
+**Description:** Bật/tắt trạng thái vaccine
+
+**Response (Success - 200):**
+```json
+{
+  "message": "Vaccine deactivated successfully",
+  "vaccine": {
+    "id": "64f8a1b2c3d4e5f6a7b8c9d2",
+    "isActive": false
+  }
+}
+```
+
+---
+
+## Vaccination History APIs
+
+### 1. Create Vaccination Record
+**Endpoint:** `POST /api/vaccination`  
+**Headers:** `Authorization: Bearer token`  
+**Description:** Tạo lịch sử tiêm chủng mới
+
+**Request Body:**
+```json
+{
+  "userId": "64f8a1b2c3d4e5f6a7b8c9d0",
+  "vaccineId": "64f8a1b2c3d4e5f6a7b8c9d2",
+  "date": "2024-03-20",
+  "location": "Bệnh viện Gia Định",
+  "doctorId": "64f8a1b2c3d4e5f6a7b8c9d3",
+  "notes": "Tiêm mũi 1, không có phản ứng phụ"
+}
+```
+
+**Response (Success - 201):**
+```json
+{
+  "message": "Tạo lịch sử tiêm chủng thành công",
+  "vaccination": {
+    "id": "64f8a1b2c3d4e5f6a7b8c9d4",
+    "userId": "64f8a1b2c3d4e5f6a7b8c9d0",
+    "vaccineId": "64f8a1b2c3d4e5f6a7b8c9d2",
+    "date": "2024-03-20T00:00:00.000Z",
+    "location": "Bệnh viện Gia Định",
+    "doctorId": "64f8a1b2c3d4e5f6a7b8c9d3",
+    "notes": "Tiêm mũi 1, không có phản ứng phụ",
+    "createdAt": "2024-01-15T10:30:00.000Z",
+    "updatedAt": "2024-01-15T10:30:00.000Z"
+  }
+}
+```
+
+### 2. Get User Vaccinations
+**Endpoint:** `GET /api/vaccination/user/:userId`  
+**Headers:** `Authorization: Bearer token`  
+**Description:** Lấy lịch sử tiêm chủng của user
+
+**Response (Success - 200):**
+```json
+[
+  {
+    "id": "64f8a1b2c3d4e5f6a7b8c9d4",
+    "userId": "64f8a1b2c3d4e5f6a7b8c9d0",
+    "vaccineId": {
+      "id": "64f8a1b2c3d4e5f6a7b8c9d2",
+      "name": "HPV Vaccine",
+      "manufacturer": "Merck"
+    },
+    "date": "2024-03-20T00:00:00.000Z",
+    "location": "Bệnh viện Gia Định",
+    "doctorId": {
+      "id": "64f8a1b2c3d4e5f6a7b8c9d3",
+      "name": "Dr. Nguyễn Văn A"
+    },
+    "notes": "Tiêm mũi 1, không có phản ứng phụ",
+    "createdAt": "2024-01-15T10:30:00.000Z"
+  }
+]
+```
+
+### 3. Get Vaccination Detail
+**Endpoint:** `GET /api/vaccination/:id`  
+**Headers:** `Authorization: Bearer token`  
+**Description:** Lấy chi tiết lịch sử tiêm chủng
+
+**Response (Success - 200):**
+```json
+{
+  "id": "64f8a1b2c3d4e5f6a7b8c9d4",
+  "userId": {
+    "id": "64f8a1b2c3d4e5f6a7b8c9d0",
+    "name": "John Doe",
+    "email": "user@example.com"
+  },
+  "vaccineId": {
+    "id": "64f8a1b2c3d4e5f6a7b8c9d2",
+    "name": "HPV Vaccine",
+    "manufacturer": "Merck"
+  },
+  "date": "2024-03-20T00:00:00.000Z",
+  "location": "Bệnh viện Gia Định",
+  "doctorId": {
+    "id": "64f8a1b2c3d4e5f6a7b8c9d3",
+    "name": "Dr. Nguyễn Văn A"
+  },
+  "notes": "Tiêm mũi 1, không có phản ứng phụ",
+  "createdAt": "2024-01-15T10:30:00.000Z",
+  "updatedAt": "2024-01-15T10:30:00.000Z"
+}
+```
+
+### 4. Update Vaccination
+**Endpoint:** `PUT /api/vaccination/:id`  
+**Headers:** `Authorization: Bearer token`  
+**Description:** Cập nhật lịch sử tiêm chủng
+
+**Request Body:**
+```json
+{
+  "date": "2024-03-21",
+  "location": "Bệnh viện Thành phố",
+  "doctorId": "64f8a1b2c3d4e5f6a7b8c9d5",
+  "notes": "Cập nhật thông tin tiêm chủng"
+}
+```
+
+**Response (Success - 200):**
+```json
+{
+  "message": "Cập nhật lịch sử tiêm chủng thành công",
+  "vaccination": {
+    "id": "64f8a1b2c3d4e5f6a7b8c9d4",
+    "date": "2024-03-21T00:00:00.000Z",
+    "location": "Bệnh viện Thành phố",
+    "doctorId": "64f8a1b2c3d4e5f6a7b8c9d5",
+    "notes": "Cập nhật thông tin tiêm chủng"
+  }
+}
+```
+
+### 5. Delete Vaccination
+**Endpoint:** `DELETE /api/vaccination/:id`  
+**Headers:** `Authorization: Bearer token`  
+**Description:** Xóa lịch sử tiêm chủng
+
+**Response (Success - 200):**
+```json
+{
+  "message": "Xóa lịch sử tiêm chủng thành công"
+}
+```
+
+### 6. Get All Vaccinations (Admin Only)
+**Endpoint:** `GET /api/vaccination/admin/all`  
+**Headers:** `Authorization: Bearer admin_token`  
+**Query Parameters:**
+- `search`: Tìm kiếm theo địa điểm
+- `startDate`: Ngày bắt đầu
+- `endDate`: Ngày kết thúc
+- `page`: Số trang (default: 1)
+- `limit`: Số item mỗi trang (default: 10)
+
+**Response (Success - 200):**
+```json
+{
+  "vaccinations": [
+    {
+      "id": "64f8a1b2c3d4e5f6a7b8c9d4",
+      "userId": {
+        "id": "64f8a1b2c3d4e5f6a7b8c9d0",
+        "name": "John Doe",
+        "email": "user@example.com"
+      },
+      "vaccineId": {
+        "id": "64f8a1b2c3d4e5f6a7b8c9d2",
+        "name": "HPV Vaccine",
+        "manufacturer": "Merck"
+      },
+      "date": "2024-03-20T00:00:00.000Z",
+      "location": "Bệnh viện Gia Định",
+      "doctorId": {
+        "id": "64f8a1b2c3d4e5f6a7b8c9d3",
+        "name": "Dr. Nguyễn Văn A"
+      },
+      "notes": "Tiêm mũi 1, không có phản ứng phụ"
+    }
+  ],
+  "total": 100,
+  "totalPages": 10,
+  "currentPage": 1
+}
+```
+
+### 7. Get Vaccination Stats (Admin Only)
+**Endpoint:** `GET /api/vaccination/admin/stats`  
+**Headers:** `Authorization: Bearer admin_token`  
+**Query Parameters:**
+- `startDate`: Ngày bắt đầu
+- `endDate`: Ngày kết thúc
+
+**Response (Success - 200):**
+```json
+{
+  "vaccineStats": [
+    {
+      "vaccineName": "HPV Vaccine",
+      "count": 50
+    },
+    {
+      "vaccineName": "COVID-19 Vaccine",
+      "count": 30
+    }
+  ],
+  "monthlyStats": [
+    {
+      "month": 3,
+      "year": 2024,
+      "count": 30
+    },
+    {
+      "month": 4,
+      "year": 2024,
+      "count": 25
+    }
+  ]
+}
+```
+
+---
+
+## Booking APIs
+
+### 1. Create Booking
+**Endpoint:** `POST /api/booking`  
+**Headers:** `Authorization: Bearer token`  
+**Description:** Tạo lịch hẹn tiêm chủng mới
+
+**Request Body:**
+```json
+{
+  "userId": "64f8a1b2c3d4e5f6a7b8c9d0",
+  "serviceId": "64f8a1b2c3d4e5f6a7b8c9d2",
+  "facilityId": "64f8a1b2c3d4e5f6a7b8c9d6",
+  "date": "2024-07-01",
+  "time": "09:00",
+  "doseNumber": 1,
+  "notes": "Ghi chú cho lịch hẹn"
+}
+```
+
+**Response (Success - 201):**
+```json
+{
+  "success": true,
+  "message": "Đặt lịch thành công",
+  "booking": {
+    "id": "64f8a1b2c3d4e5f6a7b8c9d7",
+    "userId": "64f8a1b2c3d4e5f6a7b8c9d0",
+    "serviceId": "64f8a1b2c3d4e5f6a7b8c9d2",
+    "facilityId": "64f8a1b2c3d4e5f6a7b8c9d6",
+    "facilityName": "Bệnh viện Gia Định",
+    "date": "2024-07-01",
+    "time": "09:00",
+    "status": "pending",
+    "doseNumber": 1,
+    "price": 500000
+  }
+}
+```
+
+### 2. Get User Bookings
+**Endpoint:** `GET /api/booking/user/:userId`  
+**Headers:** `Authorization: Bearer token`  
+**Query Parameters:**
+- `status`: Lọc theo trạng thái (pending, confirmed, completed, cancelled)
+- `page`: Số trang (default: 1)
+- `limit`: Số item mỗi trang (default: 10)
+
+**Response (Success - 200):**
+```json
+{
+  "success": true,
+  "bookings": [
+    {
+      "id": "64f8a1b2c3d4e5f6a7b8c9d7",
+      "serviceName": "HPV Vaccine",
+      "facilityName": "Bệnh viện Gia Định",
+      "date": "2024-07-01",
+      "time": "09:00",
+      "status": "pending",
+      "doseNumber": 1,
+      "price": 500000,
+      "paymentStatus": "pending",
+      "doctorName": null
+    }
+  ],
+  "total": 1,
+  "totalPages": 1,
+  "currentPage": 1
+}
+```
+
+### 3. Get Booking Detail
+**Endpoint:** `GET /api/booking/:id`  
+**Headers:** `Authorization: Bearer token`  
+**Description:** Lấy chi tiết lịch hẹn
+
+**Response (Success - 200):**
+```json
+{
+  "success": true,
+  "booking": {
+    "id": "64f8a1b2c3d4e5f6a7b8c9d7",
+    "userId": {
+      "id": "64f8a1b2c3d4e5f6a7b8c9d0",
+      "name": "John Doe",
+      "email": "user@example.com",
+      "phone": "0123456789",
+      "fullName": "John Doe"
+    },
+    "serviceId": {
+      "id": "64f8a1b2c3d4e5f6a7b8c9d2",
+      "name": "HPV Vaccine",
+      "manufacturer": "Merck",
+      "description": "Vaccine phòng ngừa ung thư cổ tử cung",
+      "dosage": "3 mũi (0, 2, 6 tháng)"
+    },
+    "facilityId": "64f8a1b2c3d4e5f6a7b8c9d6",
+    "facilityName": "Bệnh viện Gia Định",
+    "date": "2024-07-01",
+    "time": "09:00",
+    "status": "pending",
+    "doseNumber": 1,
+    "notes": "Ghi chú cho lịch hẹn",
+    "price": 500000,
+    "paymentStatus": "pending",
+    "doctorId": null,
+    "createdAt": "2024-01-15T10:30:00.000Z"
+  }
+}
+```

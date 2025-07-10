@@ -9,6 +9,8 @@ const authRoutes = require('./src/routes/authRoutes');
 const vaccineRoutes = require('./src/routes/vaccineRoutes');
 const vaccinationRoutes = require('./src/routes/vaccinationRoutes');
 const doctorRoutes = require('./src/routes/doctorRoutes');
+const bookingRoutes = require('./src/routes/bookingRoutes');
+const facilityRoutes = require('./src/routes/facilityRoutes');
 
 const app = express();
 
@@ -30,6 +32,8 @@ app.use('/api/auth', authRoutes);
 app.use('/api/vaccines', vaccineRoutes);
 app.use('/api/vaccination', vaccinationRoutes);
 app.use('/api/doctor', doctorRoutes);
+app.use('/api/booking', bookingRoutes);
+app.use('/api/facilities', facilityRoutes);
 
 // Error handling middleware
 app.use((err, req, res, next) => {
