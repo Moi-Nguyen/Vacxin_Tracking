@@ -1,0 +1,227 @@
+BÁO CÁO KỸ THUẬT ỨNG DỤNG ANDROID: VAC TRACK
+
+---
+
+1. GIỚI THIỆU HỆ THỐNG
+
+**Mục tiêu:**
+Vac Track là ứng dụng di động hỗ trợ người dùng quản lý lịch tiêm chủng, đặt lịch hẹn, tra cứu thông tin dịch vụ y tế và theo dõi quá trình tiêm chủng cá nhân. Ứng dụng hướng tới việc số hóa quy trình tiêm chủng, giúp người dân chủ động hơn trong việc bảo vệ sức khỏe, đồng thời giảm tải cho các cơ sở y tế.
+
+**Vấn đề thực tế:**
+- Quản lý lịch tiêm chủng truyền thống (giấy, sổ) dễ thất lạc, khó tra cứu, không có nhắc nhở tự động.
+- Người dùng thường quên lịch tiêm, bỏ lỡ mũi quan trọng, hoặc không biết thông tin dịch vụ, giá cả, địa điểm.
+- Nhân viên y tế mất nhiều thời gian nhập liệu, xác nhận thủ công, dễ sai sót.
+- Nhu cầu đặt lịch online, thanh toán không tiền mặt, nhận thông báo nhắc lịch ngày càng cao.
+
+**Người dùng mục tiêu:**
+- Phụ huynh có con nhỏ cần theo dõi lịch tiêm, nhắc nhở mũi tiêm định kỳ.
+- Người trưởng thành chủ động phòng bệnh, tiêm vaccine dịch vụ.
+- Nhân viên y tế, quản trị viên hệ thống cần quản lý lịch, xác nhận, thống kê.
+
+**Môi trường chạy:**
+- Nền tảng: Android, phát triển bằng Jetpack Compose hiện đại.
+- minSdk: 23 (Android 6.0) trở lên, targetSdk: 34.
+- Thiết bị hỗ trợ: Điện thoại, máy tính bảng Android, tối ưu cho nhiều kích thước màn hình.
+- Yêu cầu kết nối Internet để đồng bộ dữ liệu, xác thực OTP, đặt lịch online.
+
+---
+
+2. KIẾN TRÚC TỔNG THỂ
+
+**Kiến trúc sử dụng:**
+- MVVM (Model - View - ViewModel) hiện đại, tách biệt rõ ràng giữa UI, logic nghiệp vụ và truy xuất dữ liệu.
+- Navigation Compose quản lý luồng chuyển màn hình, truyền tham số động qua route.
+- Repository pattern cho phép dễ dàng thay thế nguồn dữ liệu (API, local DB, mock).
+
+**Mối quan hệ giữa các thành phần:**
+- **ViewModel:** Quản lý logic, trạng thái, xử lý sự kiện từ UI, expose state qua StateFlow hoặc LiveData.
+- **Composable:** Hiển thị UI, nhận state từ ViewModel, phát sự kiện lên ViewModel (event-driven UI).
+- **State:** Dùng StateFlow, MutableState, hoặc collectAsStateWithLifecycle để phản hồi dữ liệu bất đồng bộ, đảm bảo UI luôn nhất quán với dữ liệu.
+- **Repository:** Tầng truy xuất dữ liệu (API, local DB), tách biệt hoàn toàn với UI, dễ mock khi kiểm thử.
+
+**Quản lý navigation:**
+- Sử dụng Navigation Compose, định nghĩa rõ các route, truyền tham số (email, token, id) qua route argument.
+- Hỗ trợ deep link, popBackStack, điều hướng có điều kiện (ví dụ: xác thực thành công mới cho phép sang màn hình tiếp theo).
+
+**Tổ chức Composable:**
+- Mỗi màn hình là một Composable riêng biệt, ví dụ: LoginScreen, OtpScreen, HomeScreen, ProfileScreen, v.v.
+- Các component UI nhỏ (Button, TextField, Dialog,...) được tách thành hàm riêng để tái sử dụng, dễ kiểm thử.
+- Sử dụng Modifier để kiểm soát layout, padding, alignment, tối ưu cho nhiều kích thước màn hình.
+- Tận dụng Preview để kiểm tra UI nhanh, giảm thời gian build.
+
+**Tích hợp Jetpack khác:**
+- Có thể mở rộng với Room (lưu lịch sử), DataStore (lưu token, setting), Hilt (DI), WorkManager (nhắc lịch offline), Firebase (push notification).
+
+**Ví dụ sơ đồ kiến trúc:**
+- Có thể trình bày bằng sơ đồ block diagram: User → UI (Composable) → ViewModel → Repository → API/DB.
+
+---
+
+3. PHÂN TÍCH CHI TIẾT TÍNH NĂNG
+
+**Danh sách tính năng chính:**
+- Đăng nhập, đăng ký, xác thực OTP, quên mật khẩu, đổi mật khẩu.
+- Đặt lịch tiêm, chọn dịch vụ, chọn khung giờ, xác nhận thanh toán.
+- Xem lịch sử tiêm chủng, thông tin cá nhân, chỉnh sửa hồ sơ.
+- Thông báo nhắc lịch, hỗ trợ đa ngôn ngữ, responsive UI.
+
+**Ví dụ phân tích tính năng:**
+
+**Tính năng: Xác thực OTP**
+- **Chức năng:** Nhập mã OTP để xác thực email khi quên mật khẩu hoặc đăng ký mới.
+- **Màn hình:** OtpScreen (Composable riêng, nhận email, xử lý nhập mã, gửi lại mã, xác thực).
+- **Logic:**
+  + Nhận email từ màn hình trước, gửi mã OTP về email qua API.
+  + Người dùng nhập mã, ViewModel gọi API xác thực, nhận về resetToken.
+  + Nếu đúng, chuyển sang màn hình đặt lại mật khẩu, truyền resetToken qua route.
+  + Nếu sai, hiển thị lỗi, rung thiết bị, cho phép nhập lại hoặc gửi lại mã.
+- **Trạng thái:**
+  + Đầu vào: email, mã OTP (6 ký tự).
+  + Đầu ra: resetToken (nếu thành công), thông báo lỗi (nếu thất bại), điều hướng tiếp theo.
+
+**Tính năng: Đặt lịch tiêm**
+- **Chức năng:** Cho phép người dùng chọn dịch vụ, ngày giờ, xác nhận đặt lịch.
+- **Màn hình:** SelectServiceScreen, SelectTimeAndSlotScreen, PaymentScreen, BookingSuccessScreen.
+- **Logic:**
+  + Lấy danh sách dịch vụ từ API, cho phép chọn dịch vụ, ngày giờ.
+  + Xác nhận thông tin, thanh toán (nếu có), nhận thông báo thành công.
+  + Lưu lịch sử đặt lịch vào DB hoặc server.
+- **Trạng thái:**
+  + Đầu vào: dịch vụ, ngày giờ, thông tin cá nhân.
+  + Đầu ra: xác nhận đặt lịch, thông báo, cập nhật lịch sử.
+
+---
+
+4. TRÌNH BÀY LUỒNG DỮ LIỆU
+
+- Người dùng thao tác UI (Composable) → phát sự kiện lên ViewModel (event-driven).
+- ViewModel xử lý, gọi Repository nếu cần (API, DB), cập nhật state.
+- Kết quả trả về qua StateFlow/LiveData → UI tự động cập nhật, không cần gọi lại hàm render.
+- Sử dụng LaunchedEffect, rememberCoroutineScope để xử lý bất đồng bộ, side-effect (ví dụ: gửi OTP, nhận kết quả API).
+
+**Ví dụ luồng dữ liệu:**
+1. Người dùng nhập OTP → OtpScreen → OtpViewModel.verifyOtp(email, otp)
+2. OtpViewModel gọi Repository → Repository gọi API xác thực OTP
+3. API trả về resetToken hoặc lỗi → Repository trả về ViewModel
+4. ViewModel cập nhật state → UI tự động hiển thị kết quả, điều hướng tiếp
+
+**Luồng dữ liệu bất đồng bộ:**
+- Sử dụng coroutine, flow, collectAsStateWithLifecycle để đảm bảo UI luôn nhất quán với dữ liệu mới nhất.
+- Xử lý loading, error, success rõ ràng qua state.
+
+---
+
+5. TỐI ƯU TRONG CODE
+
+- Sử dụng remember để giữ state cục bộ, tránh recomposition không cần thiết.
+- Tách UI thành các hàm nhỏ, mỗi hàm chỉ làm một việc (Single Responsibility Principle).
+- Dùng LazyColumn cho danh sách lớn, tránh load toàn bộ UI một lúc, tiết kiệm bộ nhớ.
+- Sử dụng Modifier hợp lý để kiểm soát layout, padding, alignment, tránh nested layout không cần thiết.
+- Tận dụng derivedStateOf để tính toán giá trị phụ thuộc state, tránh tính toán lại không cần thiết.
+- Sử dụng key trong LazyColumn để tối ưu hiệu suất khi cập nhật danh sách.
+- Tối ưu nhập liệu (ví dụ: nhập OTP, focus tự động, xóa lùi, rung khi sai mã).
+- Sử dụng BoxWithConstraints, fillMaxSize để UI responsive trên nhiều thiết bị.
+
+---
+
+6. NHỮNG ĐIỀU ĐÃ LÀM ĐƯỢC
+
+- Các tính năng chính đã hoàn thiện: xác thực OTP, đặt lịch, thanh toán, xem lịch sử, chỉnh sửa hồ sơ.
+- UI nhất quán, sử dụng Material Design, tương thích nhiều kích thước màn hình.
+- Tối ưu UX: focus tự động, nhập OTP mượt mà, thông báo lỗi rõ ràng, loading indicator.
+- Tách code rõ ràng, dễ maintain, dễ mở rộng.
+- Đã xử lý các case phổ biến: mất mạng, nhập sai OTP, quên mật khẩu, đổi mật khẩu.
+
+---
+
+7. HẠN CHẾ & PHẦN CHƯA HOÀN THIỆN
+
+- Một số tính năng nâng cao (animation, dark mode, accessibility) chưa hoàn thiện.
+- Xử lý lỗi mạng, validation còn đơn giản, chưa có retry tự động.
+- Chưa có kiểm thử tự động (Unit Test, UI Test), chưa tích hợp CI/CD.
+- Chưa có nhiều animation hoặc hiệu ứng chuyển cảnh.
+- Chưa có tính năng push notification, đồng bộ cloud.
+- Chưa có phân quyền nâng cao cho nhân viên y tế, quản trị viên.
+
+---
+
+8. ĐỊNH HƯỚNG PHÁT TRIỂN
+
+- Bổ sung tính năng: thông báo push, đồng bộ cloud, QR check-in, lịch tiêm cho nhiều thành viên.
+- Refactor kiến trúc: tách UseCase, Domain Layer, áp dụng Clean Architecture, tăng testability.
+- Tối ưu hiệu suất cho máy cấu hình thấp, giảm recomposition, giảm memory leak.
+- Giao diện: Dark mode, accessibility, animation, Material 3, hỗ trợ nhiều theme.
+- Bổ sung kiểm thử tự động, tích hợp CI/CD, kiểm thử UI với ComposeTestRule, Espresso.
+- Tài liệu hóa code, tạo README chi tiết, hướng dẫn build/run, quy trình release.
+
+---
+
+9. PHÂN TÍCH RỦI RO VÀ KHÓ KHĂN KỸ THUẬT
+
+- Jetpack Compose còn mới, API thay đổi nhanh, dễ gặp lỗi khi update bản mới.
+- Debug recomposition hoặc navigation phức tạp, khó trace bug UI động.
+- Performance chưa tốt nếu dùng sai Modifier hoặc nested LazyColumn, cần profiling thường xuyên.
+- Khó kiểm soát memory leak nếu không clear state đúng cách khi navigation.
+- Tích hợp backend phức tạp (xác thực OTP, thanh toán) dễ phát sinh lỗi bảo mật.
+- Đảm bảo bảo mật thông tin cá nhân, mã hóa token, không lưu plain text.
+
+---
+
+10. PHẦN CÓ THỂ TỐI ƯU NHƯNG KHÔNG NÊN TỐI ƯU
+
+- Những phần đã đủ tốt và dễ hiểu, nếu tối ưu sẽ gây phức tạp, khó bảo trì.
+- Hiệu năng chênh lệch không đáng kể so với chi phí kỹ thuật.
+- Ưu tiên code dễ maintain, dễ đọc, dễ debug hơn code “ngắn nhất có thể”.
+- Không tối ưu quá mức các phần UI tĩnh, chỉ tối ưu các phần có ảnh hưởng lớn đến UX.
+
+---
+
+11. KIỂM TRA VÀ ĐẢM BẢO CHẤT LƯỢNG (TESTING)
+
+- Chưa có Unit Test cho ViewModel, UI Test cho Composable, cần bổ sung để tăng độ tin cậy.
+- Gợi ý: sử dụng ComposeTestRule, Espresso cho UI test, MockK cho ViewModel test.
+- Kịch bản kiểm thử: đăng nhập, đặt lịch, nhập sai OTP, network error, đổi mật khẩu, chỉnh sửa hồ sơ, responsive UI.
+- Đề xuất tích hợp CI/CD (GitHub Actions, Bitrise) để tự động kiểm thử khi push code.
+
+---
+
+12. TUÂN THỦ CHUẨN CODE & CLEAN CODE
+
+- Đặt tên biến/hàm/class rõ nghĩa, nhất quán, tuân thủ camelCase.
+- Không có hard-coded string (dùng string resource, hỗ trợ đa ngôn ngữ).
+- Chia file nhỏ hợp lý, không quá dài, mỗi file chỉ chứa một màn hình hoặc một nhóm logic liên quan.
+- Gợi ý dùng ktlint, detekt để kiểm tra code style, phát hiện code smell.
+- Comment rõ ràng các đoạn code phức tạp, giải thích các quyết định thiết kế.
+
+---
+
+13. GỢI Ý CÔNG CỤ DEV NÂNG CAO
+
+- Sử dụng Preview hiệu quả để kiểm tra UI, test nhiều trạng thái khác nhau.
+- Tích hợp CI/CD (GitHub Actions, Bitrise) để tự động build, test, deploy.
+- Tạo README, tài liệu dev, hướng dẫn build/run, quy trình release.
+- Quản lý phiên bản app (semantic versioning), ghi chú release rõ ràng.
+- Sử dụng Proguard, shrinkResources để tối ưu kích thước app khi release.
+- Đề xuất dùng Firebase Crashlytics để theo dõi lỗi runtime thực tế.
+
+---
+
+14. GỢI Ý TRÍCH DẪN TRONG LATEX
+
+- Dùng \begin{lstlisting}[language=Kotlin] để hiển thị code, chú thích rõ từng đoạn.
+- Trích dẫn theo màn hình hoặc tính năng (Listing 1: Màn hình Đăng nhập, Listing 2: Xử lý OTP).
+- Biểu đồ kiến trúc có thể dùng TikZ hoặc xuất ảnh từ draw.io, vẽ luồng dữ liệu, sơ đồ class.
+- Đề xuất trình bày code mẫu cho từng tính năng chính, ví dụ:
+
+\begin{lstlisting}[language=Kotlin, caption={Xử lý sự kiện nhập OTP trong OtpScreen}]
+OutlinedTextField(
+    value = otpInputs[i],
+    onValueChange = { ... },
+    modifier = Modifier
+        .onKeyEvent { event ->
+            if (event.nativeKeyEvent.keyCode == AndroidKeyEvent.KEYCODE_DEL) { ... }
+        }
+)
+\end{lstlisting}
+
+--- 

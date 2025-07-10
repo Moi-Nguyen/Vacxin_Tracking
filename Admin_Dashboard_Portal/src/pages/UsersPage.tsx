@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { Plus, Search, Edit, Trash, User, ChevronLeft, ChevronRight } from 'lucide-react';
 import { Button } from '../components/ui/button';
@@ -135,15 +136,17 @@ const UsersPage = () => {
 
     try {
       if (editingUser) {
-        // Update user
+        // Update user using admin API
         const updateData = {
           fullName: formData.fullName,
           age: formData.age ? parseInt(formData.age) : undefined,
           dob: formData.dob,
           address: formData.address,
           phone: formData.phone,
+          email: formData.email,
+          role: formData.role,
         };
-        await apiService.updateUser(updateData);
+        await apiService.updateUserAsAdmin(editingUser.id, updateData);
         toast({
           title: "Thành công",
           description: "Cập nhật người dùng thành công",
@@ -270,15 +273,6 @@ const UsersPage = () => {
                     />
                   </div>
                   <div>
-                    <label className="block text-sm font-medium mb-1">Email *</label>
-                    <Input
-                      type="email"
-                      value={formData.email}
-                      onChange={(e) => setFormData({ ...formData, email: e.target.value })}
-                      required={!editingUser}
-                    />
-                  </div>
-                  <div>
                     <label className="block text-sm font-medium mb-1">Mật khẩu *</label>
                     <Input
                       type="password"
@@ -287,21 +281,32 @@ const UsersPage = () => {
                       required={!editingUser}
                     />
                   </div>
-                  <div>
-                    <label className="block text-sm font-medium mb-1">Vai trò</label>
-                    <Select value={formData.role} onValueChange={(value: any) => setFormData({ ...formData, role: value })}>
-                      <SelectTrigger>
-                        <SelectValue />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="user">Người dùng</SelectItem>
-                        <SelectItem value="doctor">Bác sĩ</SelectItem>
-                        <SelectItem value="admin">Admin</SelectItem>
-                      </SelectContent>
-                    </Select>
-                  </div>
                 </>
               )}
+              
+              <div>
+                <label className="block text-sm font-medium mb-1">Email {!editingUser && '*'}</label>
+                <Input
+                  type="email"
+                  value={formData.email}
+                  onChange={(e) => setFormData({ ...formData, email: e.target.value })}
+                  required={!editingUser}
+                />
+              </div>
+              
+              <div>
+                <label className="block text-sm font-medium mb-1">Vai trò</label>
+                <Select value={formData.role} onValueChange={(value: any) => setFormData({ ...formData, role: value })}>
+                  <SelectTrigger>
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="user">Người dùng</SelectItem>
+                    <SelectItem value="doctor">Bác sĩ</SelectItem>
+                    <SelectItem value="admin">Admin</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
               
               <div>
                 <label className="block text-sm font-medium mb-1">Họ và tên</label>

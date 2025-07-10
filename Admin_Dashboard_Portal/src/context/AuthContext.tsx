@@ -17,8 +17,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const [token, setToken] = useState<string | null>(null);
 
   useEffect(() => {
-    const savedToken = localStorage.getItem('admin_token');
-    const savedUser = localStorage.getItem('admin_user');
+    const savedToken = localStorage.getItem('admin_token') || localStorage.getItem('doctor_token');
+    const savedUser = localStorage.getItem('admin_user') || localStorage.getItem('doctor_user');
     
     if (savedToken && savedUser) {
       setToken(savedToken);
@@ -29,8 +29,15 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const login = (newToken: string, newUser: User) => {
     setToken(newToken);
     setUser(newUser);
-    localStorage.setItem('admin_token', newToken);
-    localStorage.setItem('admin_user', JSON.stringify(newUser));
+    
+    // Store based on user role
+    if (newUser.role === 'admin') {
+      localStorage.setItem('admin_token', newToken);
+      localStorage.setItem('admin_user', JSON.stringify(newUser));
+    } else if (newUser.role === 'doctor') {
+      localStorage.setItem('doctor_token', newToken);
+      localStorage.setItem('doctor_user', JSON.stringify(newUser));
+    }
   };
 
   const logout = () => {
@@ -38,6 +45,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     setUser(null);
     localStorage.removeItem('admin_token');
     localStorage.removeItem('admin_user');
+    localStorage.removeItem('doctor_token');
+    localStorage.removeItem('doctor_user');
   };
 
   const isAuthenticated = !!token && !!user;

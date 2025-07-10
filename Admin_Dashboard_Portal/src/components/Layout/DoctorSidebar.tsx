@@ -1,27 +1,23 @@
 
 import React from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
-import { Users, Activity, Syringe, Building2, Calendar, History, BarChart3, User, LogOut } from 'lucide-react';
+import { Calendar, Clock, User, LogOut, Stethoscope } from 'lucide-react';
 import { useAuth } from '../../context/AuthContext';
 
-const Sidebar = () => {
+const DoctorSidebar = () => {
   const location = useLocation();
   const navigate = useNavigate();
   const { logout, user } = useAuth();
 
   const menuItems = [
-    { path: '/admin', label: 'Dashboard', icon: Activity },
-    { path: '/admin/users', label: 'Quản lý User', icon: Users },
-    { path: '/admin/vaccines', label: 'Quản lý Vaccine', icon: Syringe },
-    { path: '/admin/facilities', label: 'Cơ sở Y tế', icon: Building2 },
-    { path: '/admin/bookings', label: 'Quản lý lịch hẹn', icon: Calendar },
-    { path: '/admin/vaccination-history', label: 'Lịch sử Tiêm', icon: History },
-    { path: '/admin/stats', label: 'Thống kê', icon: BarChart3 },
+    { path: '/doctor', label: 'Dashboard', icon: Stethoscope },
+    { path: '/doctor/shifts', label: 'Quản lý ca trực', icon: Clock },
+    { path: '/doctor/bookings', label: 'Lịch hẹn hôm nay', icon: Calendar },
   ];
 
   const isActive = (path: string) => {
-    if (path === '/admin') {
-      return location.pathname === '/admin';
+    if (path === '/doctor') {
+      return location.pathname === '/doctor';
     }
     return location.pathname.startsWith(path);
   };
@@ -37,15 +33,15 @@ const Sidebar = () => {
   };
 
   return (
-    <div className="bg-gradient-to-b from-blue-900 to-blue-800 text-white w-64 min-h-screen p-4 relative">
+    <div className="bg-gradient-to-b from-green-900 to-green-800 text-white w-64 min-h-screen p-4 relative">
       <div className="mb-8">
-        <h2 className="text-2xl font-bold text-center">Admin Panel</h2>
-        <div className="mt-4 p-3 bg-blue-800 rounded-lg">
+        <h2 className="text-2xl font-bold text-center">Doctor Panel</h2>
+        <div className="mt-4 p-3 bg-green-800 rounded-lg">
           <div className="flex items-center space-x-2">
             <User className="w-5 h-5" />
             <div>
               <p className="font-medium">{user?.fullName || user?.name}</p>
-              <p className="text-sm text-blue-200">{user?.role}</p>
+              <p className="text-sm text-green-200">{user?.role}</p>
             </div>
           </div>
         </div>
@@ -58,8 +54,8 @@ const Sidebar = () => {
             to={item.path}
             className={`flex items-center space-x-3 p-3 rounded-lg transition-colors duration-200 ${
               isActive(item.path)
-                ? 'bg-blue-700 text-white'
-                : 'text-blue-100 hover:bg-blue-700 hover:text-white'
+                ? 'bg-green-700 text-white'
+                : 'text-green-100 hover:bg-green-700 hover:text-white'
             }`}
           >
             <item.icon className="w-5 h-5" />
@@ -71,7 +67,7 @@ const Sidebar = () => {
       <div className="absolute bottom-4 left-4 right-4">
         <button
           onClick={handleLogout}
-          className="flex items-center space-x-3 p-3 w-full text-blue-100 hover:bg-blue-700 hover:text-white rounded-lg transition-colors duration-200"
+          className="flex items-center space-x-3 p-3 w-full text-green-100 hover:bg-green-700 hover:text-white rounded-lg transition-colors duration-200"
         >
           <LogOut className="w-5 h-5" />
           <span>Đăng xuất</span>
@@ -81,4 +77,4 @@ const Sidebar = () => {
   );
 };
 
-export default Sidebar;
+export default DoctorSidebar;
