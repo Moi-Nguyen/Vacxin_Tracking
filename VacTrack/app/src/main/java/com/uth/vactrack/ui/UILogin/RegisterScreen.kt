@@ -77,7 +77,8 @@ fun RegisterScreen(
     LaunchedEffect(authState) {
         if (authState.isLoggedIn && authState.user != null) {
             sharedViewModel.setCurrentUser(authState.user!!)
-            onRegisterSuccess()
+            // Chuyển sang trang đăng nhập sau khi đăng ký thành công
+            onBack() // hoặc navController.navigate("login") nếu có navController
         }
     }
 

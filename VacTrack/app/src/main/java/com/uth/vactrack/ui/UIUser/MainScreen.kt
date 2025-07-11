@@ -42,7 +42,6 @@ fun BottomNavigationBarMVVM(
     onTabSelected: (Int) -> Unit,
     onFabClick: () -> Unit
 ) {
-    // Định nghĩa tab cho dễ quản lý
     val tabs = listOf(
         Triple("Home", R.drawable.ic_home, 0),
         Triple("Record", R.drawable.ic_record, 1),
@@ -50,7 +49,6 @@ fun BottomNavigationBarMVVM(
         Triple("Profile", R.drawable.ic_user, 3)
     )
     Box {
-        // Thanh điều hướng bo góc, nổi
         NavigationBar(
             containerColor = MaterialTheme.colorScheme.surface,
             tonalElevation = 8.dp,
@@ -77,7 +75,7 @@ fun BottomNavigationBarMVVM(
                     alwaysShowLabel = false
                 )
             }
-            Spacer(Modifier.weight(1f, true)) // Chừa chỗ cho FAB
+            Spacer(Modifier.weight(1f, true))
             tabs.drop(2).forEach { (label, icon, idx) ->
                 NavigationBarItem(
                     icon = {
@@ -97,7 +95,6 @@ fun BottomNavigationBarMVVM(
                 )
             }
         }
-        // FAB nổi bật ở giữa
         Box(
             modifier = Modifier
                 .fillMaxWidth()
@@ -133,7 +130,6 @@ fun MainScreen(
     val state by homeViewModel.state.collectAsStateWithLifecycle()
     var selectedTab by remember { mutableStateOf(0) }
 
-    // Load appointments khi vào MainScreen
     LaunchedEffect(sharedState.userId, sharedState.token) {
         val userId = sharedState.userId
         val token = sharedState.token
@@ -151,7 +147,7 @@ fun MainScreen(
                     when (idx) {
                         0 -> navController.navigate("home")
                         1 -> navController.navigate("appointment")
-                        2 -> {/* TODO: navController.navigate("log") */}
+                        2 -> {}
                         3 -> navController.navigate("profile")
                     }
                 },
@@ -346,24 +342,22 @@ fun MainScreen(
                         horizontalAlignment = Alignment.CenterHorizontally,
                         modifier = Modifier.clickable {
                             when (label) {
-                                "Vaccination" -> navController.navigate("select_service")
-                                "Screening" -> navController.navigate("select_service")
+                                "Vaccination", "Screening", "Consultation" -> navController.navigate("select_service")
                                 "Tracking" -> navController.navigate("tracking_booking")
-                                "Consultation" -> navController.navigate("select_service")
                             }
                         }
                     ) {
                         Box(
                             modifier = Modifier
                                 .size(60.dp)
-                                .background(MaterialTheme.colorScheme.surfaceVariant, CircleShape),
+                                .clip(CircleShape)
+                                .background(Color.White),
                             contentAlignment = Alignment.Center
                         ) {
-                            Icon(
+                            Image(
                                 painter = painterResource(id = icon),
                                 contentDescription = label,
-                                tint = MaterialTheme.colorScheme.primary,
-                                modifier = Modifier.size(30.dp)
+                                modifier = Modifier.size(28.dp)
                             )
                         }
                         Spacer(modifier = Modifier.height(8.dp))
@@ -378,4 +372,4 @@ fun MainScreen(
             }
         }
     }
-} 
+}

@@ -120,15 +120,6 @@ fun ProfileScreen(
                 if (!user?.email.isNullOrBlank()) {
                     Text(user.email, fontSize = 14.sp, color = Color.Gray)
                 }
-                if (!user?.phone.isNullOrBlank()) {
-                    Text(user.phone, fontSize = 14.sp, color = Color.Gray)
-                }
-                if (!user?.address.isNullOrBlank()) {
-                    Text(user.address ?: "", fontSize = 13.sp, color = Color.Gray)
-                }
-                if (!user?.dob.isNullOrBlank()) {
-                    Text("DOB: ${user.dob}", fontSize = 13.sp, color = Color.Gray)
-                }
             }
 
             Spacer(modifier = Modifier.height(24.dp))
