@@ -34,6 +34,7 @@ import androidx.navigation.NavController
 import com.uth.vactrack.R
 import com.uth.vactrack.ui.viewmodel.SharedViewModel
 import com.uth.vactrack.ui.viewmodel.MainViewModel
+import com.uth.vactrack.ui.viewmodel.HomeViewModel
 
 @Composable
 fun BottomNavigationBarMVVM(
@@ -123,12 +124,23 @@ fun BottomNavigationBarMVVM(
 fun MainScreen(
     navController: NavController,
     sharedViewModel: SharedViewModel = viewModel(),
-    mainViewModel: MainViewModel = viewModel()
+    mainViewModel: MainViewModel = viewModel(),
+    homeViewModel: HomeViewModel = sharedViewModel.homeViewModel
 ) {
     val context = LocalContext.current
     val sharedState by sharedViewModel.sharedState.collectAsStateWithLifecycle()
     val mainState by mainViewModel.state.collectAsStateWithLifecycle()
+    val state by homeViewModel.state.collectAsStateWithLifecycle()
     var selectedTab by remember { mutableStateOf(0) }
+
+    // Load appointments khi vào MainScreen
+    LaunchedEffect(sharedState.userId, sharedState.token) {
+        val userId = sharedState.userId
+        val token = sharedState.token
+        if (!userId.isNullOrBlank() && !token.isNullOrBlank()) {
+            homeViewModel.loadAppointments(userId, token)
+        }
+    }
 
     Scaffold(
         bottomBar = {
@@ -250,68 +262,68 @@ fun MainScreen(
             Text("Your Appointment", fontWeight = FontWeight.Bold, fontSize = 18.sp, color = MaterialTheme.colorScheme.onBackground)
             Spacer(modifier = Modifier.height(8.dp))
 
-            val appointments = listOf(
-                Triple("General Hospital", "HPV, HIB Vaccine", "12/05/2025" to "8:00 AM - 9:00 AM"),
-                Triple("City Hospital", "COVID-19 Vaccine", "14/05/2025" to "10:00 AM - 11:00 AM")
-            )
-
-            LazyRow(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
-                items(appointments) { (facility, service, datetime) ->
-                    Card(
-                        modifier = Modifier.width(280.dp),
-                        shape = RoundedCornerShape(16.dp),
-                        elevation = CardDefaults.cardElevation(4.dp),
-                        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface)
-                    ) {
-                        Column(modifier = Modifier.padding(16.dp)) {
-                            Row(verticalAlignment = Alignment.CenterVertically) {
-                                Box(
-                                    modifier = Modifier
-                                        .size(36.dp)
-                                        .background(MaterialTheme.colorScheme.primary, CircleShape),
-                                    contentAlignment = Alignment.Center
-                                ) {
-                                    Text(
-                                        text = facility.take(2).uppercase(),
-                                        color = Color.White,
-                                        fontWeight = FontWeight.Bold
+            val bookings = state.bookings
+            if (bookings.isNotEmpty()) {
+                LazyRow(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
+                    items(bookings) { booking ->
+                        Card(
+                            modifier = Modifier.width(280.dp),
+                            shape = RoundedCornerShape(16.dp),
+                            elevation = CardDefaults.cardElevation(4.dp),
+                            colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface)
+                        ) {
+                            Column(modifier = Modifier.padding(16.dp)) {
+                                Row(verticalAlignment = Alignment.CenterVertically) {
+                                    Box(
+                                        modifier = Modifier
+                                            .size(36.dp)
+                                            .background(MaterialTheme.colorScheme.primary, CircleShape),
+                                        contentAlignment = Alignment.Center
+                                    ) {
+                                        Text(
+                                            text = (booking.facilityName ?: "??").take(2).uppercase(),
+                                            color = Color.White,
+                                            fontWeight = FontWeight.Bold
+                                        )
+                                    }
+                                    Spacer(modifier = Modifier.width(12.dp))
+                                    Column(modifier = Modifier.weight(1f)) {
+                                        Text(booking.facilityName ?: "Facility", fontWeight = FontWeight.Bold, fontSize = 16.sp, color = MaterialTheme.colorScheme.onSurface)
+                                        Text(booking.serviceId, fontSize = 14.sp, color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.7f))
+                                    }
+                                    Icon(
+                                        painter = painterResource(id = R.drawable.ic_location),
+                                        contentDescription = "Map",
+                                        tint = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f),
+                                        modifier = Modifier.size(20.dp)
                                     )
                                 }
-                                Spacer(modifier = Modifier.width(12.dp))
-                                Column(modifier = Modifier.weight(1f)) {
-                                    Text(facility, fontWeight = FontWeight.Bold, fontSize = 16.sp, color = MaterialTheme.colorScheme.onSurface)
-                                    Text(service, fontSize = 14.sp, color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.7f))
+                                Spacer(modifier = Modifier.height(8.dp))
+                                Row(verticalAlignment = Alignment.CenterVertically) {
+                                    Icon(
+                                        painter = painterResource(id = R.drawable.ic_calendar),
+                                        contentDescription = null,
+                                        tint = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f),
+                                        modifier = Modifier.size(16.dp)
+                                    )
+                                    Spacer(modifier = Modifier.width(4.dp))
+                                    Text(booking.date, fontSize = 14.sp, color = MaterialTheme.colorScheme.onSurface)
+                                    Spacer(modifier = Modifier.width(12.dp))
+                                    Icon(
+                                        painter = painterResource(id = R.drawable.ic_clock),
+                                        contentDescription = null,
+                                        tint = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f),
+                                        modifier = Modifier.size(16.dp)
+                                    )
+                                    Spacer(modifier = Modifier.width(4.dp))
+                                    Text(booking.time, fontSize = 14.sp, color = MaterialTheme.colorScheme.onSurface)
                                 }
-                                Icon(
-                                    painter = painterResource(id = R.drawable.ic_location),
-                                    contentDescription = "Map",
-                                    tint = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f),
-                                    modifier = Modifier.size(20.dp)
-                                )
-                            }
-                            Spacer(modifier = Modifier.height(8.dp))
-                            Row(verticalAlignment = Alignment.CenterVertically) {
-                                Icon(
-                                    painter = painterResource(id = R.drawable.ic_calendar),
-                                    contentDescription = null,
-                                    tint = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f),
-                                    modifier = Modifier.size(16.dp)
-                                )
-                                Spacer(modifier = Modifier.width(4.dp))
-                                Text(datetime.first, fontSize = 14.sp, color = MaterialTheme.colorScheme.onSurface)
-                                Spacer(modifier = Modifier.width(12.dp))
-                                Icon(
-                                    painter = painterResource(id = R.drawable.ic_clock),
-                                    contentDescription = null,
-                                    tint = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f),
-                                    modifier = Modifier.size(16.dp)
-                                )
-                                Spacer(modifier = Modifier.width(4.dp))
-                                Text(datetime.second, fontSize = 14.sp, color = MaterialTheme.colorScheme.onSurface)
                             }
                         }
                     }
                 }
+            } else {
+                Text("No appointment history.", color = Color.Gray, modifier = Modifier.padding(8.dp))
             }
 
             Spacer(modifier = Modifier.height(24.dp))

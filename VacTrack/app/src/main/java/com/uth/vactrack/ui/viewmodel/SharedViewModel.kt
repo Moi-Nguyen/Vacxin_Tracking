@@ -4,6 +4,7 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.uth.vactrack.data.model.User
 import com.uth.vactrack.data.repository.AuthRepository
+import com.uth.vactrack.ui.viewmodel.HomeViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -20,6 +21,9 @@ data class SharedState(
 
 class SharedViewModel : ViewModel() {
     private val authRepository = AuthRepository()
+
+    // Thêm HomeViewModel để đồng bộ bookings
+    val homeViewModel: HomeViewModel = HomeViewModel()
     
     private val _sharedState = MutableStateFlow(SharedState())
     val sharedState: StateFlow<SharedState> = _sharedState.asStateFlow()

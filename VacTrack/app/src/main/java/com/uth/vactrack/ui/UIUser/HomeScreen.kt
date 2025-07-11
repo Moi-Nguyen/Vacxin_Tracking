@@ -178,22 +178,7 @@ fun HomeScreen(
                         CircularProgressIndicator(color = Color(0xFF2D25C9))
                     }
                 } else {
-                    val allBookings = state.bookings + state.appointments.map { appointment ->
-                        com.uth.vactrack.data.model.BookingDetail(
-                            id = appointment.id,
-                            userId = appointment.userId,
-                            serviceId = "",
-                            facilityId = "",
-                            facilityName = null,
-                            date = appointment.date,
-                            time = appointment.time,
-                            status = appointment.status.name,
-                            doseNumber = 1,
-                            price = appointment.price,
-                            paymentStatus = null,
-                            doctorName = null
-                        )
-                    }
+                    val allBookings = state.bookings
                     
                     if (allBookings.isEmpty()) {
                         // Hiển thị thông báo khi không có lịch hẹn
