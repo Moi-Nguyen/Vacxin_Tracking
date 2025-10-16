@@ -48,9 +48,9 @@ Hệ thống cho phép người dân dễ dàng đặt lịch, theo dõi hồ s�
 
 | Thành phần | Công nghệ |
 |:------------|:-----------|
-| **Ngôn ngữ chính** | Python 3.9+ |
-| **Framework Backend** | Flask / FastAPI |
-| **Frontend** | HTML, CSS, Bootstrap, JavaScript |
+| **Ngôn ngữ chính** | Kotlin |
+| **Framework Backend** | Nodejs |
+| **Frontend** | HTML, CSS, Bootstrap, JavaScript, Kotlin |
 | **Cơ sở dữ liệu** | SQLite / MySQL |
 | **Thư viện hỗ trợ** | Pandas, Plotly, Matplotlib |
 | **Quản lý mã nguồn** | Git & GitHub |
@@ -92,35 +92,6 @@ Hệ thống cho phép người dân dễ dàng đặt lịch, theo dõi hồ s�
   ![image](https://github.com/user-attachments/assets/6a69fb2f-e7f8-4ea7-8ba0-cf9c3c0e62fa)
 
 ---
-
-##  Hướng dẫn cài đặt và sử dụng
-
-###  Clone dự án
-```bash
-git clone https://github.com/Moi-Nguyen/Vacxin_Tracking.git
-cd Vacxin_Tracking
-
-```
-```bash
-python -m venv venv
-source venv/bin/activate   # macOS/Linux
-venv\Scripts\activate      # Windows
-```
-```bash
-python app.py
-```
-##  Cấu trúc dự án
-```
-Vacxin_Tracking/
-├── app.py                # File chạy chính
-├── config.py             # Cấu hình hệ thống
-├── static/               # CSS, JS, hình ảnh
-├── templates/            # Giao diện HTML (Flask)
-├── database/             # CSDL SQLite/MySQL
-├── requirements.txt      # Danh sách thư viện
-└── README.md             # Tài liệu dự án
-
-```
 
 | Trang chính                                                                               | Dashboard                                                                                 |
 | ----------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------- |
