@@ -11,18 +11,18 @@
 
 ---
 
-## 🧭 Mục lục
-- [🌍 Giới thiệu](#-giới-thiệu)
-- [✨ Tính năng nổi bật](#-tính-năng-nổi-bật)
-- [⚙️ Công nghệ sử dụng](#️-công-nghệ-sử-dụng)
-- [📱 Mô tả chi tiết các tính năng](#-mô-tả-chi-tiết-các-tính-năng)
-- [🚀 Hướng dẫn cài đặt và sử dụng](#-hướng-dẫn-cài-đặt-và-sử-dụng)
-- [🏗️ Cấu trúc dự án](#️-cấu-trúc-dự-án)
-- [📈 Giao diện minh họa](#-giao-diện-minh-họa)
-- [🎯 Mục tiêu dự án](#-mục-tiêu-dự-án)
-- [👥 Thành viên và giảng viên hướng dẫn](#-thành-viên-và-giảng-viên-hướng-dẫn)
-- [📬 Liên hệ](#-liên-hệ)
-- [📄 Giấy phép](#-giấy-phép)
+## 🧭 Table of Contents
+- [Overview](#-overview)
+- [Key Features](#-key-features)
+- [Tech Stack](#️-tech-stack)
+- [Feature Details](#-feature-details)
+- [Installation & Usage](#-installation--usage)
+- [Project Structure](#️-project-structure)
+- [Screenshots](#-screenshots)
+- [Project Goals](#-project-goals)
+- [Contributors & Supervisor](#-contributors--supervisor)
+- [Contact](#-contact)
+- [License](#-license)
 
 ---
 
