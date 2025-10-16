@@ -149,19 +149,3 @@ Giảng viên hướng dẫn:
 📧 Email hỗ trợ: support@vactrack.com
 
 🌐 GitHub: Moi-Nguyen
-
-
----
-
-### 🚀 Nâng cấp sẵn sàng cho GitHub Premium Look:
-- Heading được căn chỉnh hoàn hảo, có emoji hợp lý.  
-- Bảng công nghệ chuyên nghiệp, dễ đọc.  
-- Thêm màu sắc và badge chuẩn GitHub.  
-- Cấu trúc Table of Contents tự động hoạt động khi hiển thị trên GitHub.  
-- Dấu gạch “—” được đặt chuẩn Markdown để tách phần rõ ràng.  
-- Slogan cuối tạo cảm giác “brand identity”.
-
----
-
-Bạn có muốn mình **thêm phần “Demo video + hướng dẫn đóng góp (Contributing.md)”** hoặc **thêm Dockerfile hướng dẫn triển khai** cho hoàn chỉnh hơn không?  
-Nó sẽ giúp README của bạn đạt chuẩn **Top-Project GitHub Showcase** ✨
