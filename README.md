@@ -4,7 +4,6 @@
 
 ![GitHub repo size](https://img.shields.io/github/repo-size/Moi-Nguyen/Vacxin_Tracking?color=blue)
 ![GitHub stars](https://img.shields.io/github/stars/Moi-Nguyen/Vacxin_Tracking?style=social)
-![Python](https://img.shields.io/badge/Python-3.9%2B-blue)
 ![License](https://img.shields.io/badge/License-MIT-green)
 ![Status](https://img.shields.io/badge/Trạng_thái-Đang_phát_triển-success)
 ![Contributions](https://img.shields.io/badge/Đóng_góp-Chào_mừng-orange)
