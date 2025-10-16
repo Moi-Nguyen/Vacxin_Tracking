@@ -1,6 +1,6 @@
-# 💉 Hệ thống Quản lý Tiêm chủng - Vacxin Tracking System
+# Hệ thống Quản lý Tiêm chủng - Vacxin Tracking System
 
-> 🧠 Một nền tảng mã nguồn mở mạnh mẽ giúp người dân, bác sĩ và cơ sở y tế quản lý dữ liệu tiêm chủng, nhắc lịch và theo dõi hồ sơ sức khỏe một cách thông minh và hiệu quả.
+> Một nền tảng mã nguồn mở mạnh mẽ giúp người dân, bác sĩ và cơ sở y tế quản lý dữ liệu tiêm chủng, nhắc lịch và theo dõi hồ sơ sức khỏe một cách thông minh và hiệu quả.
 
 ![GitHub repo size](https://img.shields.io/github/repo-size/Moi-Nguyen/Vacxin_Tracking?color=blue)
 ![GitHub stars](https://img.shields.io/github/stars/Moi-Nguyen/Vacxin_Tracking?style=social)
@@ -11,7 +11,7 @@
 
 ---
 
-## 🧭 Table of Contents
+## Table of Contents
 - [Overview](#-overview)
 - [Key Features](#-key-features)
 - [Tech Stack](#️-tech-stack)
@@ -109,7 +109,7 @@ venv\Scripts\activate      # Windows
 ```bash
 python app.py
 ```
-
+##  Cấu trúc
 ```
 Vacxin_Tracking/
 ├── app.py                # File chạy chính
@@ -137,18 +137,18 @@ Giúp người dân dễ dàng tiếp cận dịch vụ y tế, giảm tải th�
 
 ## Sinh viên thực hiện:
 
- Nguyễn Đức Lượng — 077205012208
+ - Nguyễn Đức Lượng — 077205012208
 
- Nguyễn Trường Phục — 08205013224
+ - Nguyễn Trường Phục — 08205013224
 
- Nguyễn Phạm Thiên Phước — 052205012221
+ - Nguyễn Phạm Thiên Phước — 052205012221
 
 ## Giảng viên hướng dẫn:
 
- ThS. Trương Quang Tuấn
+ - ThS. Trương Quang Tuấn
 
 ## Liên hệ
 
-📧 Email hỗ trợ: support@vactrack.com
+- Email hỗ trợ: support@vactrack.com
 
-🌐 GitHub: Moi-Nguyen
+- GitHub: Moi-Nguyen
