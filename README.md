@@ -109,7 +109,7 @@ venv\Scripts\activate      # Windows
 ```bash
 python app.py
 ```
-##  Cấu trúc
+##  Cấu trúc dự án
 ```
 Vacxin_Tracking/
 ├── app.py                # File chạy chính
@@ -126,12 +126,12 @@ Vacxin_Tracking/
 | ----------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------- |
 | ![image](https://github.com/user-attachments/assets/62983d09-7b18-4dcd-bd79-1bbce8b6f1a3) | ![image](https://github.com/user-attachments/assets/127594fb-ffd0-4461-b0cc-95c32730b975) |
 
-Mục tiêu dự án
+## Mục tiêu dự án
 
 VacTrack hướng tới việc trở thành một nền tảng hỗ trợ tiêm chủng và quản lý hồ sơ y tế toàn diện, tiện lợi và an toàn.
 Giúp người dân dễ dàng tiếp cận dịch vụ y tế, giảm tải thủ tục hành chính và nâng cao hiệu quả quản lý cho các cơ sở y tế.
 
- “Công nghệ vì sức khỏe cộng đồng – Vaccinate Smart, Live Better.”
+> “Công nghệ vì sức khỏe cộng đồng – Vaccinate Smart, Live Better.”
 
  Thành viên và Giảng viên hướng dẫn
 
